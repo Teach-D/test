@@ -323,3 +323,34 @@
 **Claude — 구현:**
 - `.claude/agents/web-user.md` — 에이전트 정의 (sonnet, coding 스킬)
 - `.claude/agents/memory/web-user.md` — 에이전트 메모리 초기화
+
+---
+
+### 12. app 에이전트 생성
+
+**사용자:**
+> app 에이전트를 생성해줘. context: fork로 설정.
+> web-user 페이지를 Flutter WebView로 래핑하는 앱이야.
+> WebView 렌더링, 뒤로가기, 로그인 유지, 앱 아이콘/이름, 네트워크 에러, 로딩, 스플래시
+> 인증/인가는 jwt로 해줘. 최대한 심플하게, WebView 래핑에 집중.
+
+**Claude — 제안 항목 및 확정:**
+
+| 항목 | 확정 |
+|---|---|
+| WebView | flutter_inappwebview |
+| 상태 관리 | 없음 (StatefulWidget) |
+| JWT | 웹에서 완전 관리 (앱 관여 없음) |
+| 스플래시 | flutter_native_splash |
+| 앱 아이콘 | flutter_launcher_icons |
+| 네트워크 | connectivity_plus |
+| 뒤로가기 | WillPopScope + canGoBack |
+| 테스트 | flutter_test |
+
+**의존성 5개:** flutter_inappwebview, connectivity_plus, flutter_native_splash, flutter_launcher_icons, flutter_test
+
+**구현 순서:** 초기 설정 → WebView → 로딩 → 뒤로가기 → 네트워크 에러 → 스플래시 → 아이콘
+
+**Claude — 구현:**
+- `.claude/agents/app.md` — 에이전트 정의 (sonnet, coding 스킬)
+- `.claude/agents/memory/app.md` — 에이전트 메모리 초기화
