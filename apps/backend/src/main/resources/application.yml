@@ -1,0 +1,9 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: roulette-backend
+
+jwt:
+  secret: dev-secret-key-for-jwt-token-generation-minimum-256-bits-long
+  expiration: 86400000  # 24시간
