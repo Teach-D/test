@@ -201,3 +201,46 @@
 
 **Claude — 구현:**
 - `.claude/skills/improve/SKILL.md` 생성
+
+---
+
+### 9. backend 스킬 생성
+
+**사용자:**
+> backend 에이전트를 생성해줘. context: fork로 설정.
+> 과제: 룰렛으로 포인트를 얻고 상품을 구매하는 서비스
+> 기술 스택: Spring Boot 3.x + Kotlin, JPA, PostgreSQL, Swagger, junit
+> 로그인, 회원가입의 경우 아이디만 활용하고 jwt를 사용해줘
+> 민감한 정보는 git secret을 사용해줘
+
+**구현 기능:**
+- 인증: 닉네임 간편 로그인 + JWT
+- 어드민: 일일 예산 조회/설정, 상품 CRUD, 주문 취소, 룰렛 취소
+- 사용자: 룰렛 참여, 포인트 조회, 상품 목록, 상품 주문, 주문 내역
+
+**Claude — 제안 항목 및 확정:**
+
+| 항목 | 확정 |
+|---|---|
+| 빌드 | Gradle (Kotlin DSL) |
+| 패키지 | 기능 기반 7개 (auth, roulette, point, product, order, budget, common) |
+| DB 마이그레이션 | Flyway |
+| 인증 | 닉네임 간편 로그인 + JWT (Access Token, 24시간) |
+| 응답 형식 | ResponseEntity + 커스텀 래퍼 (ApiResponse) |
+| 예외 | @RestControllerAdvice + ErrorCode enum |
+| 환경 | dev(H2) / prod(PostgreSQL) |
+| 민감 정보 | git-secret |
+| Swagger | springdoc-openapi, dev에서만 활성화 |
+| 테스트 | JUnit 5 + MockK, 기능별 완성 후 작성 |
+
+**API 응답 형식 논의:**
+- 사용자: 평소 ResponseEntity 사용
+- Claude: ResponseEntity + 커스텀 래퍼 병행 추천 (프론트 3개에서 파싱 통일, 커스텀 에러 코드 분기)
+- 확정: ResponseEntity + ApiResponse 래퍼 함께 사용
+
+**구현 순서:**
+설정 → 인증 → 예산 → 룰렛 → 포인트 → 상품 → 주문 → 취소
+
+**Claude — 구현:**
+- `.claude/skills/backend/SKILL.md` 생성
+- 기술 스택, 프로젝트 구조, API 응답, 예외 처리, 인증, 환경 설정, DB 마이그레이션, 엔티티, Swagger, 구현 순서, 테스트 규칙, 비즈니스 규칙 포함
