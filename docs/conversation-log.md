@@ -257,3 +257,32 @@
 - `.claude/agents/memory/backend.md` — 에이전트 메모리 파일 초기화
   - 아키텍처 결정, 코드베이스 패턴, 구현 진행 상황 추적
 - `.claude/skills/backend/SKILL.md` — 기존 스킬은 에이전트가 참조하는 컨텍스트로 유지
+
+---
+
+### 10. web-admin 에이전트 생성
+
+**사용자:**
+> web-admin 에이전트를 생성해줘. context: fork로 설정.
+> 관리자가 상품/사용자/룰렛/주문을 관리하는 페이지야.
+> 기술 스택: React 18+ (Vite), TypeScript (확정)
+> 인증/인가는 jwt로 해줘. 기능 구현 우선, 디자인 최소한으로 하는 방향.
+
+**Claude — 제안 항목 및 확정:**
+
+| 항목 | 확정 |
+|---|---|
+| UI 프레임워크 | Ant Design (어드민 특화, 디자인 최소화) |
+| 서버 상태 | TanStack Query |
+| 클라이언트 상태 | Zustand |
+| HTTP | Axios (JWT 인터셉터) |
+| 라우팅 | React Router v7 |
+| 폼 | React Hook Form + Zod |
+| 인증 | JWT localStorage + axios 인터셉터 + PrivateRoute |
+| 테스트 | Vitest + React Testing Library |
+
+**페이지 구성:** 로그인, 대시보드, 일일 예산, 룰렛 관리, 상품 관리, 주문 관리
+
+**Claude — 구현:**
+- `.claude/agents/web-admin.md` — 에이전트 정의 (sonnet, coding 스킬)
+- `.claude/agents/memory/web-admin.md` — 에이전트 메모리 초기화
