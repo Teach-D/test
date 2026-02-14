@@ -1,0 +1,10 @@
+CREATE TABLE members (
+    id         BIGINT       AUTO_INCREMENT PRIMARY KEY,
+    nickname   VARCHAR(50)  NOT NULL UNIQUE,
+    role       VARCHAR(20)  NOT NULL DEFAULT 'USER',
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 기본 어드민 계정
+INSERT INTO members (nickname, role) VALUES ('admin', 'ADMIN');
