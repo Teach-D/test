@@ -130,3 +130,45 @@
 **Claude — 구현:**
 - `.claude/skills/prompt/SKILL.md` 생성
 - Python 미설치로 init_skill.py 대신 수동 생성
+
+---
+
+### 7. coding 스킬 생성
+
+**사용자:**
+> coding 스킬을 생성해줘.
+> 코드 작성 시 품질을 유지하기 위한 규칙 스킬이야.
+> 이 스킬에서 정해야 할 항목들이 뭐가 있는지 알려주고, 각각 선택지와 추천을 제시해줘.
+> 커밋 규칙, 테스트 규칙도 포함해서 제안해줘.
+> 기능별로 구현을 완료하면 커밋 규칙을 보고 git add 후에 commit을 해줘
+
+**Claude — 제안 항목:**
+
+| 항목 | 확정 내용 |
+|---|---|
+| 코드 원칙 | KISS + DRY + YAGNI + SRP + DI |
+| 함수 규칙 | 30줄, 파라미터 3개, 중첩 2단계 |
+| 커밋 단위 | 기능 단위, 300줄 이내, 커밋 전 5가지 체크 |
+| 에러 | 한국어 메시지, 커스텀 에러 코드, 통일 응답 형식 |
+| 보안 | 입력 검증, ORM 필수, .env 관리, bcrypt, Spring Security |
+
+**테스트 도구 (앱별):**
+
+| 앱 | 테스트 도구 |
+|---|---|
+| backend (Kotlin + Spring Boot) | JUnit 5 + MockK |
+| web (React) | Vitest + React Testing Library |
+| app (Flutter) | flutter_test + integration_test |
+
+**사용자:**
+> backend는 kotlin, spring boot야
+
+**Claude:**
+- 백엔드 기술 스택 반영하여 CLAUDE.md 수정 (NestJS → Kotlin + Spring Boot)
+- Swagger: springdoc-openapi, Formatter: ktlint, 네이밍: PascalCase 파일명
+- 디렉토리 구조: Spring Boot 표준, 에러 처리: @RestControllerAdvice
+- 커밋: `5cececc` docs: CLAUDE.md 백엔드 기술 스택 반영
+
+**Claude — 구현:**
+- `.claude/skills/coding/SKILL.md` 생성
+- 코드 원칙, 함수 규칙, 커밋 규칙, 테스트 규칙(앱별), 에러 처리, 보안 규칙 포함
