@@ -1,0 +1,12 @@
+CREATE TABLE point_usages (
+    id         BIGINT    AUTO_INCREMENT PRIMARY KEY,
+    point_id   BIGINT    NOT NULL,
+    order_id   BIGINT    NOT NULL,
+    amount     INT       NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_usage_point FOREIGN KEY (point_id) REFERENCES points(id),
+    CONSTRAINT fk_usage_order FOREIGN KEY (order_id) REFERENCES orders(id)
+);
+
+CREATE INDEX idx_usage_order ON point_usages(order_id);
+CREATE INDEX idx_usage_point ON point_usages(point_id);
