@@ -15,3 +15,21 @@ export interface LoginResponse {
   nickname: string;
   role: string;
 }
+
+export interface RouletteStatusResponse {
+  hasPlayedToday: boolean;
+  remainingBudget: number;
+  canPlay: boolean;
+}
+
+export interface RouletteResultResponse {
+  point: number;
+  playedAt: string;
+}
+
+export interface BudgetResponse {
+  date: string;
+  totalBudget: number;
+  usedBudget: number;
+  remainingBudget: number;
+}

@@ -3,18 +3,9 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { LoginPage } from './features/auth/components/login-page';
 import { PrivateRoute } from './common/components/private-route';
 import { Layout } from './common/components/layout';
+import { RoulettePage } from './features/roulette/components/roulette-page';
 
 // 플레이스홀더 컴포넌트들 (나중에 실제 페이지로 교체)
-function HomePage(): ReactElement {
-  return (
-    <div className="flex h-full items-center justify-center p-4">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">홈</h2>
-        <p className="mt-2 text-gray-600">룰렛 페이지가 여기에 표시됩니다</p>
-      </div>
-    </div>
-  );
-}
 
 function PointsPage(): ReactElement {
   return (
@@ -63,7 +54,7 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <HomePage />,
+            element: <RoulettePage />,
           },
           {
             path: 'points',
