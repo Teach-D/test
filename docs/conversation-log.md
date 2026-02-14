@@ -244,3 +244,16 @@
 **Claude — 구현:**
 - `.claude/skills/backend/SKILL.md` 생성
 - 기술 스택, 프로젝트 구조, API 응답, 예외 처리, 인증, 환경 설정, DB 마이그레이션, 엔티티, Swagger, 구현 순서, 테스트 규칙, 비즈니스 규칙 포함
+
+**사용자:**
+> 백엔드 스킬이 아니라 백엔드 에이전트를 만들고 싶어
+> /backend로 호출하는 Task 서브에이전트 방식
+
+**Claude — 에이전트 생성:**
+- `.claude/agents/backend.md` — 에이전트 정의 파일 생성
+  - model: sonnet, skills: backend + coding, memory: project
+  - 작업 흐름: 분석 → 스킬 규칙 적용 → 코드 작성 → 테스트 → 회귀 확인 → 커밋
+  - 제약 사항: any 금지, raw SQL 금지, EAGER 금지, setter 금지 등
+- `.claude/agents/memory/backend.md` — 에이전트 메모리 파일 초기화
+  - 아키텍처 결정, 코드베이스 패턴, 구현 진행 상황 추적
+- `.claude/skills/backend/SKILL.md` — 기존 스킬은 에이전트가 참조하는 컨텍스트로 유지
