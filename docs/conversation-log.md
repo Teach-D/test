@@ -286,3 +286,40 @@
 **Claude — 구현:**
 - `.claude/agents/web-admin.md` — 에이전트 정의 (sonnet, coding 스킬)
 - `.claude/agents/memory/web-admin.md` — 에이전트 메모리 초기화
+
+---
+
+### 11. web-user 에이전트 생성
+
+**사용자:**
+> web-user 에이전트를 생성해줘. context: fork로 설정.
+> 사용자가 룰렛을 돌리고, 포인트 확인, 상품 구매하는 페이지야.
+> 기술 스택: TypeScript, Tailwind, TanStack Query (확정)
+> 프레임워크 선택(Next.js vs React Vite)도 장단점과 함께 추천해줘.
+> 인증/인가는 jwt로 해줘. 기능 동작 중심, 디자인 최소한.
+
+**프레임워크 비교:**
+- Next.js: SSR/SEO 강점이나 인증 필수 앱이라 불필요, App Router 복잡도 과도
+- React (Vite): SPA에 적합, web-admin과 빌드 도구 통일, 심플
+- **확정: React (Vite)**
+
+**Claude — 제안 항목 및 확정:**
+
+| 항목 | 확정 |
+|---|---|
+| 프레임워크 | React (Vite) |
+| UI | Headless UI + Tailwind |
+| 서버 상태 | TanStack Query |
+| 클라이언트 상태 | Zustand |
+| HTTP | Axios (JWT 인터셉터) |
+| 라우팅 | React Router v7 |
+| 폼 | React Hook Form + Zod |
+| 룰렛 | CSS Animation |
+| 인증 | JWT localStorage + axios 인터셉터 + PrivateRoute |
+| 테스트 | Vitest + RTL |
+
+**페이지 구성:** 로그인, 홈(룰렛), 포인트, 상품 목록, 주문 내역
+
+**Claude — 구현:**
+- `.claude/agents/web-user.md` — 에이전트 정의 (sonnet, coding 스킬)
+- `.claude/agents/memory/web-user.md` — 에이전트 메모리 초기화
