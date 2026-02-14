@@ -386,3 +386,23 @@ QA 범위 (각 앱 에이전트와 역할 분리):
 - `.claude/agents/qa.md` — 에이전트 정의 (sonnet, coding 스킬)
 - `.claude/agents/memory/qa.md` — 에이전트 메모리 초기화
 - `docs/qa/` — QA 리포트 저장 디렉토리 생성
+
+---
+
+### 14. 커맨드 5개 생성
+
+**사용자:**
+> .claude/commands/에 5개 커맨드를 생성해줘.
+> 각 커맨드는 스킬 + 에이전트를 포함하는 방식.
+
+**Claude — 구현:**
+
+| 커맨드 | 스킬 | 에이전트 |
+|---|---|---|
+| `/backend` | prompt, coding | backend, improve |
+| `/web-admin` | prompt, coding | web-admin, improve |
+| `/web-user` | prompt, coding | web-user, improve |
+| `/app` | prompt, coding | app, improve |
+| `/qa` | prompt | qa |
+
+각 커맨드 작업 흐름: prompt로 명확화 → 에이전트가 coding 규칙 따라 구현 → improve가 검토 → 커밋
