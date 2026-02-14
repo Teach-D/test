@@ -1,30 +1,64 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:point_roulette/main.dart';
+import 'package:point_roulette/screens/network_error_screen.dart';
+import 'package:point_roulette/widgets/loading_overlay.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('NetworkErrorScreen', () {
+    testWidgets('네트워크 오류 메시지와 아이콘이 표시된다', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NetworkErrorScreen(onRetry: () {}),
+        ),
+      );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      expect(find.byIcon(Icons.wifi_off_rounded), findsOneWidget);
+      expect(find.text('네트워크 연결을 확인해주세요'), findsOneWidget);
+      expect(find.text('다시 시도'), findsOneWidget);
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    testWidgets('다시 시도 버튼 탭 시 onRetry 콜백이 호출된다',
+        (WidgetTester tester) async {
+      var retryCount = 0;
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NetworkErrorScreen(onRetry: () => retryCount++),
+        ),
+      );
+
+      await tester.tap(find.text('다시 시도'));
+      await tester.pump();
+
+      expect(retryCount, 1);
+    });
+  });
+
+  group('LoadingOverlay', () {
+    testWidgets('isLoading이 true이면 로딩 인디케이터가 표시된다',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: LoadingOverlay(isLoading: true),
+          ),
+        ),
+      );
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('isLoading이 false이면 로딩 인디케이터가 표시되지 않는다',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: LoadingOverlay(isLoading: false),
+          ),
+        ),
+      );
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    });
   });
 }
