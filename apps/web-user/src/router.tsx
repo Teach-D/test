@@ -1,0 +1,88 @@
+import { type ReactElement } from 'react';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { LoginPage } from './features/auth/components/login-page';
+import { PrivateRoute } from './common/components/private-route';
+import { Layout } from './common/components/layout';
+
+// 플레이스홀더 컴포넌트들 (나중에 실제 페이지로 교체)
+function HomePage(): ReactElement {
+  return (
+    <div className="flex h-full items-center justify-center p-4">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900">홈</h2>
+        <p className="mt-2 text-gray-600">룰렛 페이지가 여기에 표시됩니다</p>
+      </div>
+    </div>
+  );
+}
+
+function PointsPage(): ReactElement {
+  return (
+    <div className="flex h-full items-center justify-center p-4">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900">포인트</h2>
+        <p className="mt-2 text-gray-600">포인트 내역이 여기에 표시됩니다</p>
+      </div>
+    </div>
+  );
+}
+
+function ProductsPage(): ReactElement {
+  return (
+    <div className="flex h-full items-center justify-center p-4">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900">상품</h2>
+        <p className="mt-2 text-gray-600">상품 목록이 여기에 표시됩니다</p>
+      </div>
+    </div>
+  );
+}
+
+function OrdersPage(): ReactElement {
+  return (
+    <div className="flex h-full items-center justify-center p-4">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900">주문</h2>
+        <p className="mt-2 text-gray-600">주문 내역이 여기에 표시됩니다</p>
+      </div>
+    </div>
+  );
+}
+
+const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
+    path: '/',
+    element: <PrivateRoute />,
+    children: [
+      {
+        element: <Layout />,
+        children: [
+          {
+            index: true,
+            element: <HomePage />,
+          },
+          {
+            path: 'points',
+            element: <PointsPage />,
+          },
+          {
+            path: 'products',
+            element: <ProductsPage />,
+          },
+          {
+            path: 'orders',
+            element: <OrdersPage />,
+          },
+        ],
+      },
+    ],
+  },
+]);
+
+export function Router(): ReactElement {
+  return <RouterProvider router={router} />;
+}
