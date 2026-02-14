@@ -32,8 +32,8 @@ export function ProductPage(): ReactElement {
       setProducts(productsData);
       setBalance(balanceData);
     } catch (err) {
-      console.warn('Failed to load products:', err);
-      setError('데이터를 불러오는 중 오류가 발생했습니다.');
+      const message = err instanceof Error ? err.message : '데이터를 불러오는 중 오류가 발생했습니다.';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -69,8 +69,8 @@ export function ProductPage(): ReactElement {
       // 상품 목록과 잔액 새로고침
       await loadData();
     } catch (err) {
-      console.warn('Failed to purchase product:', err);
-      setError('구매 중 오류가 발생했습니다. 다시 시도해주세요.');
+      const message = err instanceof Error ? err.message : '구매 중 오류가 발생했습니다.';
+      setError(message);
       setSelectedProduct(null);
     } finally {
       setIsPurchasing(false);

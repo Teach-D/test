@@ -50,8 +50,8 @@ export function OrderPage(): ReactElement {
       const ordersData = await getMyOrders();
       setOrders(ordersData);
     } catch (err) {
-      console.warn('Failed to load orders:', err);
-      setError('주문 내역을 불러오는 중 오류가 발생했습니다.');
+      const message = err instanceof Error ? err.message : '주문 내역을 불러오는 중 오류가 발생했습니다.';
+      setError(message);
     } finally {
       setIsLoading(false);
     }

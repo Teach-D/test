@@ -72,8 +72,8 @@ export function PointPage(): ReactElement {
         setPoints(pointsData);
         setExpiringSoonPoints(expiringSoonData);
       } catch (err) {
-        console.warn('Failed to load point data:', err);
-        setError('포인트 정보를 불러오는 중 오류가 발생했습니다.');
+        const message = err instanceof Error ? err.message : '포인트 정보를 불러오는 중 오류가 발생했습니다.';
+        setError(message);
       } finally {
         setIsLoading(false);
       }

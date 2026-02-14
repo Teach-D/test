@@ -34,8 +34,8 @@ export function RoulettePage(): ReactElement {
         setStatus(statusData);
         setBudget(budgetData);
       } catch (err) {
-        console.warn('Failed to load roulette data:', err);
-        setError('데이터를 불러오는 중 오류가 발생했습니다.');
+        const message = err instanceof Error ? err.message : '데이터를 불러오는 중 오류가 발생했습니다.';
+        setError(message);
       } finally {
         setIsLoading(false);
       }
@@ -55,8 +55,8 @@ export function RoulettePage(): ReactElement {
       setResult(spinResult);
       // 스핀 애니메이션은 RouletteWheel 컴포넌트에서 처리
     } catch (err) {
-      console.warn('Failed to spin roulette:', err);
-      setError('룰렛을 돌리는 중 오류가 발생했습니다.');
+      const message = err instanceof Error ? err.message : '룰렛을 돌리는 중 오류가 발생했습니다.';
+      setError(message);
       setSpinState('idle');
     }
   };

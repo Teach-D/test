@@ -26,23 +26,25 @@ client.interceptors.request.use(
 // 응답 인터셉터: 401 처리 및 ApiResponse 언래핑
 client.interceptors.response.use(
   (response) => {
-    // ApiResponse 래퍼에서 data 추출
     const apiResponse = response.data as ApiResponse<unknown>;
-    if (apiResponse.status === 'SUCCESS' && apiResponse.data !== null) {
+    if (apiResponse.status === 'SUCCESS') {
       return { ...response, data: apiResponse.data };
     }
-    return response;
+    // ERROR 상태인 경우 에러 메시지로 reject
+    return Promise.reject(new Error(apiResponse.message ?? '요청 처리에 실패했습니다.'));
   },
-  (error: AxiosError) => {
+  (error: AxiosError<ApiResponse<unknown>>) => {
     if (error.response?.status === 401) {
-      // 인증 실패 시 토큰 제거 및 로그인 페이지로 리다이렉트
       localStorage.removeItem('accessToken');
       localStorage.removeItem('memberId');
       localStorage.removeItem('nickname');
       localStorage.removeItem('role');
       window.location.href = '/login';
+      return Promise.reject(new Error('인증이 필요합니다.'));
     }
-    return Promise.reject(error);
+    // 백엔드 에러 메시지 추출
+    const apiMessage = error.response?.data?.message;
+    return Promise.reject(new Error(apiMessage ?? error.message ?? '네트워크 오류가 발생했습니다.'));
   },
 );
 
