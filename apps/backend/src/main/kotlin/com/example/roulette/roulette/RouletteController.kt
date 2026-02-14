@@ -1,6 +1,7 @@
 package com.example.roulette.roulette
 
 import com.example.roulette.common.dto.ApiResponse
+import com.example.roulette.roulette.dto.RouletteHistoryResponse
 import com.example.roulette.roulette.dto.RouletteResultResponse
 import com.example.roulette.roulette.dto.RouletteStatusResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -27,6 +28,12 @@ class RouletteController(
     fun getStatus(authentication: Authentication): ResponseEntity<ApiResponse<RouletteStatusResponse>> {
         val memberId = authentication.principal as Long
         return ResponseEntity.ok(ApiResponse.success(rouletteService.getStatus(memberId)))
+    }
+
+    @Operation(summary = "전체 룰렛 참여 내역 조회 (어드민)", description = "전체 룰렛 참여 내역을 조회합니다.")
+    @GetMapping("/api/admin/roulette/histories")
+    fun getAllHistories(): ResponseEntity<ApiResponse<List<RouletteHistoryResponse>>> {
+        return ResponseEntity.ok(ApiResponse.success(rouletteService.getAllHistories()))
     }
 
     @Operation(summary = "룰렛 참여 취소 (어드민)", description = "룰렛 참여를 취소하고 포인트를 회수합니다.")

@@ -6,6 +6,7 @@ import com.example.roulette.common.exception.BusinessException
 import com.example.roulette.common.exception.ErrorCode
 import com.example.roulette.point.PointService
 import com.example.roulette.point.entity.Point
+import com.example.roulette.roulette.dto.RouletteHistoryResponse
 import com.example.roulette.roulette.dto.RouletteResultResponse
 import com.example.roulette.roulette.dto.RouletteStatusResponse
 import com.example.roulette.roulette.entity.RouletteHistory
@@ -94,6 +95,22 @@ class RouletteService(
         // 3. 포인트 회수 — 해당 회원의 해당 금액 포인트 찾아서 잔액 0으로
         val points = pointService.getPointsByMemberAndAmount(history.memberId, history.point, history.createdAt)
         points.firstOrNull()?.let { pointService.revoke(it.id) }
+    }
+
+    /** 전체 룰렛 참여 내역 조회 (어드민) */
+    @Transactional(readOnly = true)
+    fun getAllHistories(): List<RouletteHistoryResponse> {
+        return rouletteRepository.findAllByOrderByPlayedAtDesc()
+            .map { history ->
+                RouletteHistoryResponse(
+                    id = history.id,
+                    memberId = history.memberId,
+                    point = history.point,
+                    isCancelled = history.isCancelled,
+                    playedAt = history.playedAt,
+                    createdAt = history.createdAt,
+                )
+            }
     }
 
     private fun generateRandomPoint(): Int {

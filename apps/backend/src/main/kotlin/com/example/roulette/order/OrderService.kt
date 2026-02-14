@@ -90,6 +90,16 @@ class OrderService(
             }
     }
 
+    /** 전체 주문 목록 조회 (어드민) */
+    @Transactional(readOnly = true)
+    fun getAllOrders(): List<OrderResponse> {
+        return orderRepository.findAllByOrderByOrderedAtDesc()
+            .map { order ->
+                val product = productService.getProduct(order.productId)
+                toResponse(order, product.name)
+            }
+    }
+
     private fun toResponse(order: Order, productName: String) = OrderResponse(
         id = order.id,
         productId = order.productId,

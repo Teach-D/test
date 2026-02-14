@@ -18,4 +18,7 @@ interface RouletteRepository : JpaRepository<RouletteHistory, Long> {
         memberId: Long,
         playedAt: LocalDate,
     ): Boolean
+
+    /** 전체 룰렛 참여 내역 조회 (어드민) */
+    fun findAllByOrderByPlayedAtDesc(): List<RouletteHistory>
 }
