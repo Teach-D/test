@@ -7,3 +7,6 @@ spring:
 jwt:
   secret: dev-secret-key-for-jwt-token-generation-minimum-256-bits-long
   expiration: 86400000  # 24시간
+
+cors:
+  allowed-origins: http://localhost:3000,http://localhost:5173,http://localhost:5174
