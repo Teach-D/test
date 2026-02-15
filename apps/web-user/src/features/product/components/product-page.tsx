@@ -1,47 +1,21 @@
-import { type ReactElement, useEffect, useState } from 'react';
-import { getProducts } from '../api/product-api';
-import { placeOrder } from '@/features/order/api/order-api';
-import { getPointBalance } from '@/features/point/api/point-api';
-import type {
-  ProductResponse,
-  PointBalanceResponse,
-} from '@/common/types/api';
+import { type ReactElement, useState } from 'react';
+import { useProducts, usePlaceOrder } from '../hooks/use-product';
+import { usePointBalance } from '@/features/point/hooks/use-point';
+import type { ProductResponse, OrderRequest } from '@/common/types/api';
 import { LoadingSpinner } from '@/common/components/loading-spinner';
 import { ErrorMessage } from '@/common/components/error-message';
 
 export function ProductPage(): ReactElement {
-  const [products, setProducts] = useState<ProductResponse[]>([]);
-  const [balance, setBalance] = useState<PointBalanceResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<ProductResponse | null>(
-    null,
-  );
-  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<ProductResponse | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // 초기 데이터 로드
-  const loadData = async (): Promise<void> => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const [productsData, balanceData] = await Promise.all([
-        getProducts(),
-        getPointBalance(),
-      ]);
-      setProducts(productsData);
-      setBalance(balanceData);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : '데이터를 불러오는 중 오류가 발생했습니다.';
-      setError(message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // 상품 목록과 포인트 잔액 조회 — TanStack Query가 캐싱과 로딩 상태를 관리
+  const productsQuery = useProducts();
+  const balanceQuery = usePointBalance();
+  const placeOrderMutation = usePlaceOrder();
 
-  useEffect(() => {
-    void loadData();
-  }, []);
+  const balance = balanceQuery.data;
+  const products = productsQuery.data ?? [];
 
   // 구매 확인 모달 열기
   const handlePurchaseClick = (product: ProductResponse): void => {
@@ -55,45 +29,39 @@ export function ProductPage(): ReactElement {
   };
 
   // 구매 확정
-  const handleConfirmPurchase = async (): Promise<void> => {
+  const handleConfirmPurchase = (): void => {
     if (!selectedProduct) return;
 
-    try {
-      setIsPurchasing(true);
-      setError(null);
-      await placeOrder({ productId: selectedProduct.id });
-      setSuccessMessage(
-        `'${selectedProduct.name}'을(를) 성공적으로 구매했습니다!`,
-      );
-      setSelectedProduct(null);
-      // 상품 목록과 잔액 새로고침
-      await loadData();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : '구매 중 오류가 발생했습니다.';
-      setError(message);
-      setSelectedProduct(null);
-    } finally {
-      setIsPurchasing(false);
-    }
+    const request: OrderRequest = { productId: selectedProduct.id };
+    const productName = selectedProduct.name;
+
+    placeOrderMutation.mutate(request, {
+      onSuccess: () => {
+        setSuccessMessage(`'${productName}'을(를) 성공적으로 구매했습니다!`);
+        setSelectedProduct(null);
+      },
+      onError: () => {
+        setSelectedProduct(null);
+      },
+    });
   };
 
   // 구매 가능 여부 확인
   const canPurchase = (product: ProductResponse): boolean => {
-    return (
-      product.stock > 0 &&
-      balance !== null &&
-      balance.totalBalance >= product.price
-    );
+    if (product.stock === 0) return false;
+    if (balance === undefined) return false;
+    return balance.totalBalance >= product.price;
   };
 
   // 구매 버튼 텍스트
   const getPurchaseButtonText = (product: ProductResponse): string => {
     if (product.stock === 0) return '품절';
-    if (balance !== null && balance.totalBalance < product.price)
-      return '포인트 부족';
+    if (balance !== undefined && balance.totalBalance < product.price) return '포인트 부족';
     return '구매하기';
   };
 
+  // 초기 로딩 상태 처리
+  const isLoading = productsQuery.isLoading || balanceQuery.isLoading;
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center p-4">
@@ -123,9 +91,9 @@ export function ProductPage(): ReactElement {
       )}
 
       {/* 에러 메시지 */}
-      {error && (
+      {(productsQuery.isError || placeOrderMutation.isError) && (
         <div className="mb-4">
-          <ErrorMessage message={error} />
+          <ErrorMessage message="데이터를 불러오거나 처리하는 중 오류가 발생했습니다." />
         </div>
       )}
 
@@ -187,17 +155,17 @@ export function ProductPage(): ReactElement {
             <div className="flex gap-3">
               <button
                 onClick={handleCancelPurchase}
-                disabled={isPurchasing}
+                disabled={placeOrderMutation.isPending}
                 className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 font-semibold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 취소
               </button>
               <button
                 onClick={handleConfirmPurchase}
-                disabled={isPurchasing}
+                disabled={placeOrderMutation.isPending}
                 className="flex-1 rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isPurchasing ? '처리 중...' : '구매'}
+                {placeOrderMutation.isPending ? '처리 중...' : '구매'}
               </button>
             </div>
           </div>

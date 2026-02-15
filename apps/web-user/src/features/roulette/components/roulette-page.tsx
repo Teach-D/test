@@ -1,73 +1,39 @@
-import { type ReactElement, useEffect, useState } from 'react';
+import { type ReactElement, useState } from 'react';
 import { RouletteWheel } from './roulette-wheel';
-import {
-  getRouletteStatus,
-  spinRoulette,
-  getTodayBudget,
-} from '../api/roulette-api';
-import type {
-  RouletteStatusResponse,
-  RouletteResultResponse,
-  BudgetResponse,
-} from '@/common/types/api';
+import { useRouletteStatus, useTodayBudget, useSpinRoulette } from '../hooks/use-roulette';
+import type { RouletteResultResponse } from '@/common/types/api';
+import { LoadingSpinner } from '@/common/components/loading-spinner';
+import { ErrorMessage } from '@/common/components/error-message';
 
 type SpinState = 'idle' | 'spinning' | 'result';
 
 export function RoulettePage(): ReactElement {
-  const [status, setStatus] = useState<RouletteStatusResponse | null>(null);
-  const [budget, setBudget] = useState<BudgetResponse | null>(null);
-  const [result, setResult] = useState<RouletteResultResponse | null>(null);
   const [spinState, setSpinState] = useState<SpinState>('idle');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<RouletteResultResponse | null>(null);
 
-  // 초기 데이터 로드
-  useEffect(() => {
-    async function loadInitialData(): Promise<void> {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const [statusData, budgetData] = await Promise.all([
-          getRouletteStatus(),
-          getTodayBudget(),
-        ]);
-        setStatus(statusData);
-        setBudget(budgetData);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : '데이터를 불러오는 중 오류가 발생했습니다.';
-        setError(message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    void loadInitialData();
-  }, []);
+  // 룰렛 상태와 예산 조회 — TanStack Query가 캐싱과 로딩 상태를 관리
+  const statusQuery = useRouletteStatus();
+  const budgetQuery = useTodayBudget();
+  const spinMutation = useSpinRoulette();
 
   // 룰렛 돌리기 핸들러
-  const handleSpin = async (): Promise<void> => {
-    if (!status?.canPlay || spinState !== 'idle') return;
+  const handleSpin = (): void => {
+    if (!statusQuery.data?.canPlay || spinState !== 'idle') return;
 
-    try {
-      setError(null);
-      setSpinState('spinning');
-      const spinResult = await spinRoulette();
-      setResult(spinResult);
-      // 스핀 애니메이션은 RouletteWheel 컴포넌트에서 처리
-    } catch (err) {
-      const message = err instanceof Error ? err.message : '룰렛을 돌리는 중 오류가 발생했습니다.';
-      setError(message);
-      setSpinState('idle');
-    }
+    setSpinState('spinning');
+    spinMutation.mutate(undefined, {
+      onSuccess: (data) => {
+        setResult(data);
+      },
+      onError: () => {
+        setSpinState('idle');
+      },
+    });
   };
 
-  // 스핀 완료 핸들러
+  // 스핀 애니메이션 완료 핸들러
   const handleSpinComplete = (): void => {
     setSpinState('result');
-    // 상태 업데이트
-    if (status) {
-      setStatus({ ...status, hasPlayedToday: true, canPlay: false });
-    }
   };
 
   // 결과 확인 후 초기화
@@ -75,26 +41,30 @@ export function RoulettePage(): ReactElement {
     setSpinState('idle');
   };
 
+  // 초기 로딩 상태 처리
+  const isLoading = statusQuery.isLoading || budgetQuery.isLoading;
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center p-4">
         <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+          <LoadingSpinner />
           <p className="mt-2 text-gray-600">로딩 중...</p>
         </div>
       </div>
     );
   }
 
-  if (error && !status) {
+  // 데이터 로드 실패 시 에러 처리
+  if (statusQuery.isError && !statusQuery.data) {
     return (
       <div className="flex h-full items-center justify-center p-4">
-        <div className="rounded-lg bg-red-50 p-4 text-center">
-          <p className="text-red-800">{error}</p>
-        </div>
+        <ErrorMessage message="룰렛 정보를 불러오는 중 오류가 발생했습니다." />
       </div>
     );
   }
+
+  const status = statusQuery.data;
+  const budget = budgetQuery.data;
 
   const budgetPercentage = budget
     ? Math.round((budget.usedBudget / budget.totalBudget) * 100)
@@ -163,9 +133,10 @@ export function RoulettePage(): ReactElement {
             </p>
           )}
 
-          {error && (
+          {/* 뮤테이션 에러 메시지 */}
+          {spinMutation.isError && (
             <div className="mt-4 rounded-lg bg-red-50 p-3 text-center text-sm text-red-800">
-              {error}
+              룰렛을 돌리는 중 오류가 발생했습니다.
             </div>
           )}
         </div>

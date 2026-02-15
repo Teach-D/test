@@ -1,14 +1,7 @@
-import { type ReactElement, useEffect, useState } from 'react';
+import { type ReactElement } from 'react';
 import dayjs from 'dayjs';
-import {
-  getPointBalance,
-  getPoints,
-  getExpiringSoonPoints,
-} from '../api/point-api';
-import type {
-  PointBalanceResponse,
-  PointResponse,
-} from '@/common/types/api';
+import { usePointBalance, usePoints, useExpiringSoonPoints } from '../hooks/use-point';
+import type { PointResponse } from '@/common/types/api';
 import { LoadingSpinner } from '@/common/components/loading-spinner';
 import { ErrorMessage } from '@/common/components/error-message';
 
@@ -52,36 +45,13 @@ function getStatusBadge(status: PointStatus): ReactElement {
 }
 
 export function PointPage(): ReactElement {
-  const [balance, setBalance] = useState<PointBalanceResponse | null>(null);
-  const [points, setPoints] = useState<PointResponse[]>([]);
-  const [expiringSoonPoints, setExpiringSoonPoints] = useState<PointResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // 포인트 관련 데이터 조회 — TanStack Query가 캐싱과 로딩 상태를 관리
+  const balanceQuery = usePointBalance();
+  const pointsQuery = usePoints();
+  const expiringSoonQuery = useExpiringSoonPoints();
 
-  useEffect(() => {
-    async function loadPointData(): Promise<void> {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const [balanceData, pointsData, expiringSoonData] = await Promise.all([
-          getPointBalance(),
-          getPoints(),
-          getExpiringSoonPoints(),
-        ]);
-        setBalance(balanceData);
-        setPoints(pointsData);
-        setExpiringSoonPoints(expiringSoonData);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : '포인트 정보를 불러오는 중 오류가 발생했습니다.';
-        setError(message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    void loadPointData();
-  }, []);
-
+  // 전체 로딩 상태 처리
+  const isLoading = balanceQuery.isLoading || pointsQuery.isLoading || expiringSoonQuery.isLoading;
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center p-4">
@@ -93,13 +63,18 @@ export function PointPage(): ReactElement {
     );
   }
 
-  if (error) {
+  // 에러 처리
+  if (balanceQuery.isError || pointsQuery.isError) {
     return (
       <div className="flex h-full items-center justify-center p-4">
-        <ErrorMessage message={error} />
+        <ErrorMessage message="포인트 정보를 불러오는 중 오류가 발생했습니다." />
       </div>
     );
   }
+
+  const balance = balanceQuery.data;
+  const points = pointsQuery.data ?? [];
+  const expiringSoonPoints = expiringSoonQuery.data ?? [];
 
   return (
     <div className="flex min-h-full flex-col p-4">

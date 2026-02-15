@@ -1,6 +1,8 @@
-import { type ReactElement, useEffect, useState } from 'react';
+import { type ReactElement } from 'react';
 import dayjs from 'dayjs';
-import { getMyOrders } from '../api/order-api';
+import { useMyOrders } from '../hooks/use-order';
+import { useQueryClient } from '@tanstack/react-query';
+import { ORDER_QUERY_KEYS } from '../hooks/use-order';
 import type { OrderResponse } from '@/common/types/api';
 import { LoadingSpinner } from '@/common/components/loading-spinner';
 import { ErrorMessage } from '@/common/components/error-message';
@@ -39,33 +41,18 @@ function getStatusBadge(status: string): ReactElement {
 }
 
 export function OrderPage(): ReactElement {
-  const [orders, setOrders] = useState<OrderResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const loadOrders = async (): Promise<void> => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const ordersData = await getMyOrders();
-      setOrders(ordersData);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : '주문 내역을 불러오는 중 오류가 발생했습니다.';
-      setError(message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // 주문 내역 조회 — TanStack Query가 캐싱과 로딩 상태를 관리
+  const ordersQuery = useMyOrders();
 
-  useEffect(() => {
-    void loadOrders();
-  }, []);
-
+  // 새로고침 버튼 클릭 시 캐시를 무효화하여 최신 데이터 재조회
   const handleRefresh = (): void => {
-    void loadOrders();
+    void queryClient.invalidateQueries({ queryKey: ORDER_QUERY_KEYS.list });
   };
 
-  if (isLoading) {
+  // 로딩 상태 처리
+  if (ordersQuery.isLoading) {
     return (
       <div className="flex h-full items-center justify-center p-4">
         <div className="text-center">
@@ -76,10 +63,11 @@ export function OrderPage(): ReactElement {
     );
   }
 
-  if (error) {
+  // 에러 상태 처리
+  if (ordersQuery.isError) {
     return (
       <div className="flex h-full flex-col items-center justify-center p-4">
-        <ErrorMessage message={error} />
+        <ErrorMessage message="주문 내역을 불러오는 중 오류가 발생했습니다." />
         <button
           onClick={handleRefresh}
           className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
@@ -89,6 +77,8 @@ export function OrderPage(): ReactElement {
       </div>
     );
   }
+
+  const orders = (ordersQuery.data as OrderResponse[]) ?? [];
 
   return (
     <div className="flex min-h-full flex-col p-4">
