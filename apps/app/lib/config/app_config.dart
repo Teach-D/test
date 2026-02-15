@@ -11,7 +11,7 @@ class AppConfig {
   static const String _devUrl = 'http://10.0.2.2:5174';
   static const String _prodUrl = String.fromEnvironment(
     'WEB_URL',
-    defaultValue: 'https://your-web-user.vercel.app',
+    defaultValue: 'https://test-tau-rust-26.vercel.app',
   );
 
   static String get webUrl => env == 'prod' ? _prodUrl : _devUrl;
