@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
@@ -16,7 +15,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
 class SecurityConfig(
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
     @Value("\${cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost:5174}")
@@ -39,12 +37,16 @@ class SecurityConfig(
                     .requestMatchers("/api-docs/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     // H2 콘솔
                     .requestMatchers("/h2-console/**").permitAll()
+                    // 에러 페이지
+                    .requestMatchers("/error").permitAll()
                     // 상품 목록 조회는 인증 없이
                     .requestMatchers(HttpMethod.GET, "/api/products").permitAll()
                     // 어드민 API
                     .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                    // 나머지는 인증 필요
-                    .anyRequest().authenticated()
+                    // 사용자 API는 인증 필요
+                    .requestMatchers("/api/**").authenticated()
+                    // 나머지는 허용 (정적 리소스 등)
+                    .anyRequest().permitAll()
             }
             .headers { it.frameOptions { frame -> frame.sameOrigin() } }
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
