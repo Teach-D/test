@@ -2,14 +2,15 @@ package com.example.roulette.roulette
 
 import com.example.roulette.budget.BudgetRepository
 import com.example.roulette.budget.BudgetService
+import com.example.roulette.budget.entity.DailyBudget
 import com.example.roulette.common.exception.BusinessException
 import com.example.roulette.common.exception.ErrorCode
 import com.example.roulette.point.PointService
-import com.example.roulette.point.entity.Point
 import com.example.roulette.roulette.dto.RouletteHistoryResponse
 import com.example.roulette.roulette.dto.RouletteResultResponse
 import com.example.roulette.roulette.dto.RouletteStatusResponse
 import com.example.roulette.roulette.entity.RouletteHistory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -37,22 +38,21 @@ class RouletteService(
         val point = generateRandomPoint()
 
         // 3. 예산 확인 및 차감 (비관적 락)
-        val budget = budgetRepository.findByBudgetDateWithLock(today)
-            .orElseGet {
-                budgetService.getOrCreateBudget(today).also {
-                    budgetRepository.flush()
-                }
-            }
+        val budget = getOrCreateBudgetWithLock(today)
 
         if (!budget.canUse(point)) {
             throw BusinessException(ErrorCode.BUDGET_EXCEEDED)
         }
         budget.use(point)
 
-        // 4. 룰렛 기록 저장
-        rouletteRepository.save(
-            RouletteHistory(memberId = memberId, point = point, playedAt = today)
-        )
+        // 4. 룰렛 기록 저장 (UNIQUE 제약으로 동시 중복 참여 방지)
+        try {
+            rouletteRepository.saveAndFlush(
+                RouletteHistory(memberId = memberId, point = point, playedAt = today)
+            )
+        } catch (e: DataIntegrityViolationException) {
+            throw BusinessException(ErrorCode.ROULETTE_ALREADY_PLAYED)
+        }
 
         // 5. 포인트 지급
         pointService.grant(memberId, point)
@@ -110,6 +110,20 @@ class RouletteService(
                     playedAt = history.playedAt,
                     createdAt = history.createdAt,
                 )
+            }
+    }
+
+    /** 비관적 락으로 예산 조회, 없으면 생성 후 락 재획득 */
+    private fun getOrCreateBudgetWithLock(date: LocalDate): DailyBudget {
+        return budgetRepository.findByBudgetDateWithLock(date)
+            .orElseGet {
+                try {
+                    budgetRepository.saveAndFlush(DailyBudget(budgetDate = date))
+                } catch (e: DataIntegrityViolationException) {
+                    // 다른 트랜잭션이 먼저 생성한 경우 무시
+                }
+                budgetRepository.findByBudgetDateWithLock(date)
+                    .orElseThrow { BusinessException(ErrorCode.BUDGET_NOT_FOUND) }
             }
     }
 

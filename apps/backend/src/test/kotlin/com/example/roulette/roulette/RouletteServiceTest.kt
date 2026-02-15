@@ -44,7 +44,7 @@ class RouletteServiceTest {
 
         every { rouletteRepository.existsByMemberIdAndPlayedAtAndIsCancelledFalse(memberId, today) } returns false
         every { budgetRepository.findByBudgetDateWithLock(today) } returns Optional.of(budget)
-        every { rouletteRepository.save(any()) } answers { firstArg() }
+        every { rouletteRepository.saveAndFlush(any()) } answers { firstArg() }
         every { pointService.grant(any(), any()) } returns Point(
             memberId = memberId, amount = 100, remainingAmount = 100,
             expiresAt = LocalDateTime.now().plusDays(30), id = 1L,
