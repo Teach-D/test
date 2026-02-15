@@ -1,0 +1,2 @@
+# SQL 마이그레이션 파일은 항상 LF로 유지 (Flyway 체크섬 일관성)
+*.sql text eol=lf
