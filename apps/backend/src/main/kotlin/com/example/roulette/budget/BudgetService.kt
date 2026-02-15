@@ -13,7 +13,7 @@ class BudgetService(
 ) {
 
     /** 오늘 예산 조회 (없으면 기본값으로 생성) */
-    @Transactional(readOnly = true)
+    @Transactional
     fun getTodayBudget(): BudgetResponse {
         val budget = getOrCreateBudget(LocalDate.now())
         return toResponse(budget)

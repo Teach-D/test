@@ -61,7 +61,7 @@ class RouletteService(
     }
 
     /** 오늘 참여 상태 확인 */
-    @Transactional(readOnly = true)
+    @Transactional
     fun getStatus(memberId: Long): RouletteStatusResponse {
         val today = LocalDate.now()
         val hasPlayed = rouletteRepository.existsByMemberIdAndPlayedAtAndIsCancelledFalse(memberId, today)
