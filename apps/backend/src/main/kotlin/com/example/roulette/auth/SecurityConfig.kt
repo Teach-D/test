@@ -31,6 +31,8 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
+                    // CORS preflight 요청 허용
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     // 인증 없이 접근 가능
                     .requestMatchers("/api/auth/**").permitAll()
                     // Swagger
