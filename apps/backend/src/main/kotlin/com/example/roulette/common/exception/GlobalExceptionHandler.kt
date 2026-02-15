@@ -24,4 +24,11 @@ class GlobalExceptionHandler {
             .badRequest()
             .body(ApiResponse.error("VALIDATION_ERROR", message))
     }
+
+    @ExceptionHandler(Exception::class)
+    fun handleException(e: Exception): ResponseEntity<ApiResponse<Nothing>> {
+        return ResponseEntity
+            .internalServerError()
+            .body(ApiResponse.error("INTERNAL_ERROR", "${e.javaClass.simpleName}: ${e.message}"))
+    }
 }
