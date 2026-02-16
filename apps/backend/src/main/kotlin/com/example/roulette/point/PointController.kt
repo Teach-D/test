@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController
 class PointController(
     private val pointService: PointService,
 ) {
-
     @Operation(summary = "포인트 잔액 조회", description = "내 포인트 잔액과 만료 예정 포인트를 조회합니다.")
     @GetMapping("/balance")
     fun getBalance(authentication: Authentication): ResponseEntity<ApiResponse<PointBalanceResponse>> {

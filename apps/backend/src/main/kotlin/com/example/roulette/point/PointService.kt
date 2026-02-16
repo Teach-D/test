@@ -13,24 +13,30 @@ import java.time.LocalDateTime
 class PointService(
     private val pointRepository: PointRepository,
 ) {
-
     /** 포인트 지급 (룰렛 당첨 시) */
     @Transactional
-    fun grant(memberId: Long, amount: Int): Point {
+    fun grant(
+        memberId: Long,
+        amount: Int,
+    ): Point {
         val now = LocalDateTime.now()
-        val point = Point(
-            memberId = memberId,
-            amount = amount,
-            remainingAmount = amount,
-            earnedAt = now,
-            expiresAt = now.plusDays(Point.EXPIRY_DAYS),
-        )
+        val point =
+            Point(
+                memberId = memberId,
+                amount = amount,
+                remainingAmount = amount,
+                earnedAt = now,
+                expiresAt = now.plusDays(Point.EXPIRY_DAYS),
+            )
         return pointRepository.save(point)
     }
 
     /** 포인트 차감 (만료 임박순 FIFO) */
     @Transactional
-    fun deduct(memberId: Long, totalAmount: Int): List<Pair<Long, Int>> {
+    fun deduct(
+        memberId: Long,
+        totalAmount: Int,
+    ): List<Pair<Long, Int>> {
         val now = LocalDateTime.now()
         val balance = pointRepository.getAvailableBalance(memberId, now)
         if (balance < totalAmount) {
@@ -57,8 +63,10 @@ class PointService(
     @Transactional
     fun restore(pointUsages: List<Pair<Long, Int>>) {
         for ((pointId, amount) in pointUsages) {
-            val point = pointRepository.findById(pointId)
-                .orElseThrow { BusinessException(ErrorCode.POINT_NOT_FOUND) }
+            val point =
+                pointRepository
+                    .findById(pointId)
+                    .orElseThrow { BusinessException(ErrorCode.POINT_NOT_FOUND) }
             point.restore(amount)
         }
     }
@@ -66,25 +74,32 @@ class PointService(
     /** 포인트 회수 (룰렛 취소 시) — 해당 포인트의 잔액을 0으로 */
     @Transactional
     fun revoke(pointId: Long) {
-        val point = pointRepository.findById(pointId)
-            .orElseThrow { BusinessException(ErrorCode.POINT_NOT_FOUND) }
+        val point =
+            pointRepository
+                .findById(pointId)
+                .orElseThrow { BusinessException(ErrorCode.POINT_NOT_FOUND) }
         point.remainingAmount = 0
     }
 
     /** 회원의 특정 금액/시간 이후 생성된 포인트 조회 (룰렛 취소 시 사용) */
     @Transactional(readOnly = true)
-    fun getPointsByMemberAndAmount(memberId: Long, amount: Int, afterTime: LocalDateTime): List<Point> {
-        return pointRepository.findByMemberIdAndAmountAndEarnedAtAfter(memberId, amount, afterTime)
-    }
+    fun getPointsByMemberAndAmount(
+        memberId: Long,
+        amount: Int,
+        afterTime: LocalDateTime,
+    ): List<Point> = pointRepository.findByMemberIdAndAmountAndEarnedAtAfter(memberId, amount, afterTime)
 
     /** 내 포인트 잔액 조회 */
     @Transactional(readOnly = true)
     fun getBalance(memberId: Long): PointBalanceResponse {
         val now = LocalDateTime.now()
         val totalBalance = pointRepository.getAvailableBalance(memberId, now)
-        val expiringSoon = pointRepository.findExpiringSoon(
-            memberId, now, now.plusDays(Point.EXPIRING_SOON_DAYS)
-        )
+        val expiringSoon =
+            pointRepository.findExpiringSoon(
+                memberId,
+                now,
+                now.plusDays(Point.EXPIRING_SOON_DAYS),
+            )
         val expiringSoonBalance = expiringSoon.sumOf { it.remainingAmount }
 
         return PointBalanceResponse(
@@ -95,26 +110,30 @@ class PointService(
 
     /** 내 포인트 목록 조회 */
     @Transactional(readOnly = true)
-    fun getPoints(memberId: Long): List<PointResponse> {
-        return pointRepository.findByMemberIdOrderByEarnedAtDesc(memberId)
+    fun getPoints(memberId: Long): List<PointResponse> =
+        pointRepository
+            .findByMemberIdOrderByEarnedAtDesc(memberId)
             .map { toResponse(it) }
-    }
 
     /** 만료 예정 포인트 조회 (7일 이내) */
     @Transactional(readOnly = true)
     fun getExpiringSoon(memberId: Long): List<PointResponse> {
         val now = LocalDateTime.now()
-        return pointRepository.findExpiringSoon(
-            memberId, now, now.plusDays(Point.EXPIRING_SOON_DAYS)
-        ).map { toResponse(it) }
+        return pointRepository
+            .findExpiringSoon(
+                memberId,
+                now,
+                now.plusDays(Point.EXPIRING_SOON_DAYS),
+            ).map { toResponse(it) }
     }
 
-    private fun toResponse(point: Point) = PointResponse(
-        id = point.id,
-        amount = point.amount,
-        remainingAmount = point.remainingAmount,
-        earnedAt = point.earnedAt,
-        expiresAt = point.expiresAt,
-        isExpired = point.isExpired,
-    )
+    private fun toResponse(point: Point) =
+        PointResponse(
+            id = point.id,
+            amount = point.amount,
+            remainingAmount = point.remainingAmount,
+            earnedAt = point.earnedAt,
+            expiresAt = point.expiresAt,
+            isExpired = point.isExpired,
+        )
 }

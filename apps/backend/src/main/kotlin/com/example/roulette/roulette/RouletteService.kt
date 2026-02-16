@@ -23,7 +23,6 @@ class RouletteService(
     private val budgetService: BudgetService,
     private val pointService: PointService,
 ) {
-
     /** 룰렛 참여 */
     @Transactional
     fun spin(memberId: Long): RouletteResultResponse {
@@ -48,7 +47,7 @@ class RouletteService(
         // 4. 룰렛 기록 저장 (UNIQUE 제약으로 동시 중복 참여 방지)
         try {
             rouletteRepository.saveAndFlush(
-                RouletteHistory(memberId = memberId, point = point, playedAt = today)
+                RouletteHistory(memberId = memberId, point = point, playedAt = today),
             )
         } catch (e: DataIntegrityViolationException) {
             throw BusinessException(ErrorCode.ROULETTE_ALREADY_PLAYED)
@@ -77,8 +76,10 @@ class RouletteService(
     /** 룰렛 참여 취소 (어드민) */
     @Transactional
     fun cancel(historyId: Long) {
-        val history = rouletteRepository.findById(historyId)
-            .orElseThrow { BusinessException(ErrorCode.ROULETTE_NOT_FOUND) }
+        val history =
+            rouletteRepository
+                .findById(historyId)
+                .orElseThrow { BusinessException(ErrorCode.ROULETTE_NOT_FOUND) }
 
         if (history.isCancelled) {
             throw BusinessException(ErrorCode.ROULETTE_ALREADY_CANCELLED)
@@ -88,8 +89,10 @@ class RouletteService(
         history.cancel()
 
         // 2. 예산 반환
-        val budget = budgetRepository.findByBudgetDateWithLock(history.playedAt)
-            .orElseThrow { BusinessException(ErrorCode.BUDGET_NOT_FOUND) }
+        val budget =
+            budgetRepository
+                .findByBudgetDateWithLock(history.playedAt)
+                .orElseThrow { BusinessException(ErrorCode.BUDGET_NOT_FOUND) }
         budget.refund(history.point)
 
         // 3. 포인트 회수 — 해당 회원의 해당 금액 포인트 찾아서 잔액 0으로
@@ -99,8 +102,9 @@ class RouletteService(
 
     /** 전체 룰렛 참여 내역 조회 (어드민) */
     @Transactional(readOnly = true)
-    fun getAllHistories(): List<RouletteHistoryResponse> {
-        return rouletteRepository.findAllByOrderByPlayedAtDesc()
+    fun getAllHistories(): List<RouletteHistoryResponse> =
+        rouletteRepository
+            .findAllByOrderByPlayedAtDesc()
             .map { history ->
                 RouletteHistoryResponse(
                     id = history.id,
@@ -111,25 +115,24 @@ class RouletteService(
                     createdAt = history.createdAt,
                 )
             }
-    }
 
     /** 비관적 락으로 예산 조회, 없으면 생성 후 락 재획득 */
-    private fun getOrCreateBudgetWithLock(date: LocalDate): DailyBudget {
-        return budgetRepository.findByBudgetDateWithLock(date)
+    private fun getOrCreateBudgetWithLock(date: LocalDate): DailyBudget =
+        budgetRepository
+            .findByBudgetDateWithLock(date)
             .orElseGet {
                 try {
                     budgetRepository.saveAndFlush(DailyBudget(budgetDate = date))
                 } catch (e: DataIntegrityViolationException) {
                     // 다른 트랜잭션이 먼저 생성한 경우 무시
                 }
-                budgetRepository.findByBudgetDateWithLock(date)
+                budgetRepository
+                    .findByBudgetDateWithLock(date)
                     .orElseThrow { BusinessException(ErrorCode.BUDGET_NOT_FOUND) }
             }
-    }
 
-    private fun generateRandomPoint(): Int {
-        return (Random.nextInt(MIN_POINT / POINT_UNIT, MAX_POINT / POINT_UNIT + 1)) * POINT_UNIT
-    }
+    private fun generateRandomPoint(): Int =
+        (Random.nextInt(MIN_POINT / POINT_UNIT, MAX_POINT / POINT_UNIT + 1)) * POINT_UNIT
 
     companion object {
         const val MIN_POINT = 100

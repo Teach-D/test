@@ -9,24 +9,18 @@ import java.time.LocalDateTime
 class Point(
     @Column(nullable = false)
     val memberId: Long,
-
     @Column(nullable = false)
     val amount: Int,
-
     @Column(nullable = false)
     var remainingAmount: Int,
-
     @Column(nullable = false)
     val earnedAt: LocalDateTime = LocalDateTime.now(),
-
     @Column(nullable = false)
     val expiresAt: LocalDateTime,
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 ) : BaseTimeEntity() {
-
     /** 만료 여부 */
     val isExpired: Boolean
         get() = LocalDateTime.now().isAfter(expiresAt)

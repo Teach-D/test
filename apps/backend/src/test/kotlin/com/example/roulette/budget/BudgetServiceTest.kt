@@ -12,7 +12,6 @@ import java.time.LocalDate
 import java.util.*
 
 class BudgetServiceTest {
-
     private lateinit var budgetRepository: BudgetRepository
     private lateinit var budgetService: BudgetService
 

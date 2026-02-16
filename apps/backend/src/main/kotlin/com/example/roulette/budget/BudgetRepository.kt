@@ -9,7 +9,6 @@ import java.time.LocalDate
 import java.util.Optional
 
 interface BudgetRepository : JpaRepository<DailyBudget, Long> {
-
     fun findByBudgetDate(budgetDate: LocalDate): Optional<DailyBudget>
 
     /** 비관적 락으로 예산 조회 (동시성 제어) */

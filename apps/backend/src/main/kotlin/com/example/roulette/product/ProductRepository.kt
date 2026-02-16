@@ -4,7 +4,6 @@ import com.example.roulette.product.entity.Product
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface ProductRepository : JpaRepository<Product, Long> {
-
     /** 활성 상품 목록 */
     fun findByIsActiveTrueOrderByCreatedAtDesc(): List<Product>
 

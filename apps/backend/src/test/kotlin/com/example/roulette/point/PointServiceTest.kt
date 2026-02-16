@@ -12,7 +12,6 @@ import java.time.LocalDateTime
 import java.util.*
 
 class PointServiceTest {
-
     private lateinit var pointRepository: PointRepository
     private lateinit var pointService: PointService
 
@@ -27,10 +26,14 @@ class PointServiceTest {
         // given
         val memberId = 1L
         val amount = 500
-        val savedPoint = Point(
-            memberId = memberId, amount = amount, remainingAmount = amount,
-            expiresAt = LocalDateTime.now().plusDays(30), id = 1L,
-        )
+        val savedPoint =
+            Point(
+                memberId = memberId,
+                amount = amount,
+                remainingAmount = amount,
+                expiresAt = LocalDateTime.now().plusDays(30),
+                id = 1L,
+            )
         every { pointRepository.save(any()) } returns savedPoint
 
         // when
@@ -46,14 +49,22 @@ class PointServiceTest {
         // given
         val memberId = 1L
         val now = LocalDateTime.now()
-        val point1 = Point(
-            memberId = memberId, amount = 300, remainingAmount = 300,
-            expiresAt = now.plusDays(5), id = 1L,
-        )
-        val point2 = Point(
-            memberId = memberId, amount = 500, remainingAmount = 500,
-            expiresAt = now.plusDays(20), id = 2L,
-        )
+        val point1 =
+            Point(
+                memberId = memberId,
+                amount = 300,
+                remainingAmount = 300,
+                expiresAt = now.plusDays(5),
+                id = 1L,
+            )
+        val point2 =
+            Point(
+                memberId = memberId,
+                amount = 500,
+                remainingAmount = 500,
+                expiresAt = now.plusDays(20),
+                id = 2L,
+            )
 
         every { pointRepository.getAvailableBalance(memberId, any()) } returns 800
         every { pointRepository.findAvailablePoints(memberId, any()) } returns listOf(point1, point2)
@@ -76,9 +87,10 @@ class PointServiceTest {
         every { pointRepository.getAvailableBalance(memberId, any()) } returns 100
 
         // when & then
-        val exception = assertThrows(BusinessException::class.java) {
-            pointService.deduct(memberId, 500)
-        }
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                pointService.deduct(memberId, 500)
+            }
         assertEquals(ErrorCode.POINT_NOT_ENOUGH, exception.errorCode)
     }
 
@@ -88,9 +100,10 @@ class PointServiceTest {
         val memberId = 1L
         val now = LocalDateTime.now()
         every { pointRepository.getAvailableBalance(memberId, any()) } returns 1500
-        every { pointRepository.findExpiringSoon(memberId, any(), any()) } returns listOf(
-            Point(memberId = memberId, amount = 300, remainingAmount = 200, expiresAt = now.plusDays(3), id = 1L),
-        )
+        every { pointRepository.findExpiringSoon(memberId, any(), any()) } returns
+            listOf(
+                Point(memberId = memberId, amount = 300, remainingAmount = 200, expiresAt = now.plusDays(3), id = 1L),
+            )
 
         // when
         val result = pointService.getBalance(memberId)
@@ -103,10 +116,14 @@ class PointServiceTest {
     @Test
     fun `포인트 환불 시 원래 금액까지만 복원된다`() {
         // given
-        val point = Point(
-            memberId = 1L, amount = 500, remainingAmount = 200,
-            expiresAt = LocalDateTime.now().plusDays(30), id = 1L,
-        )
+        val point =
+            Point(
+                memberId = 1L,
+                amount = 500,
+                remainingAmount = 200,
+                expiresAt = LocalDateTime.now().plusDays(30),
+                id = 1L,
+            )
         every { pointRepository.findById(1L) } returns Optional.of(point)
 
         // when
@@ -119,10 +136,14 @@ class PointServiceTest {
     @Test
     fun `포인트 환불 시 원래 금액을 초과하면 원래 금액으로 제한된다`() {
         // given
-        val point = Point(
-            memberId = 1L, amount = 500, remainingAmount = 400,
-            expiresAt = LocalDateTime.now().plusDays(30), id = 1L,
-        )
+        val point =
+            Point(
+                memberId = 1L,
+                amount = 500,
+                remainingAmount = 400,
+                expiresAt = LocalDateTime.now().plusDays(30),
+                id = 1L,
+            )
         every { pointRepository.findById(1L) } returns Optional.of(point)
 
         // when

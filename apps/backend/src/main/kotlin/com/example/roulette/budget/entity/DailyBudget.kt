@@ -9,18 +9,14 @@ import java.time.LocalDate
 class DailyBudget(
     @Column(nullable = false, unique = true)
     val budgetDate: LocalDate,
-
     @Column(nullable = false)
     var totalBudget: Int = DEFAULT_BUDGET,
-
     @Column(nullable = false)
     var usedBudget: Int = 0,
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 ) : BaseTimeEntity() {
-
     /** 잔여 예산 */
     val remainingBudget: Int
         get() = totalBudget - usedBudget

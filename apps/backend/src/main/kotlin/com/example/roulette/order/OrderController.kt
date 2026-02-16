@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*
 class OrderController(
     private val orderService: OrderService,
 ) {
-
     @Operation(summary = "상품 주문", description = "포인트를 사용하여 상품을 주문합니다.")
     @PostMapping("/api/orders")
     fun placeOrder(
@@ -34,13 +33,13 @@ class OrderController(
 
     @Operation(summary = "전체 주문 목록 조회 (어드민)", description = "전체 주문 목록을 조회합니다.")
     @GetMapping("/api/admin/orders")
-    fun getAllOrders(): ResponseEntity<ApiResponse<List<OrderResponse>>> {
-        return ResponseEntity.ok(ApiResponse.success(orderService.getAllOrders()))
-    }
+    fun getAllOrders(): ResponseEntity<ApiResponse<List<OrderResponse>>> =
+        ResponseEntity.ok(ApiResponse.success(orderService.getAllOrders()))
 
     @Operation(summary = "주문 취소 (어드민)", description = "주문을 취소하고 포인트를 환불합니다.")
     @PostMapping("/api/admin/orders/{orderId}/cancel")
-    fun cancelOrder(@PathVariable orderId: Long): ResponseEntity<ApiResponse<OrderResponse>> {
-        return ResponseEntity.ok(ApiResponse.success(orderService.cancelOrder(orderId)))
-    }
+    fun cancelOrder(
+        @PathVariable orderId: Long,
+    ): ResponseEntity<ApiResponse<OrderResponse>> =
+        ResponseEntity.ok(ApiResponse.success(orderService.cancelOrder(orderId)))
 }

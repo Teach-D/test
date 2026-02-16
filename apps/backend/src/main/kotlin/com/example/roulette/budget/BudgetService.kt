@@ -11,7 +11,6 @@ import java.time.LocalDate
 class BudgetService(
     private val budgetRepository: BudgetRepository,
 ) {
-
     /** 오늘 예산 조회 (없으면 기본값으로 생성) */
     @Transactional
     fun getTodayBudget(): BudgetResponse {
@@ -23,8 +22,10 @@ class BudgetService(
     @Transactional
     fun setTodayBudget(request: BudgetSetRequest): BudgetResponse {
         val today = LocalDate.now()
-        val budget = budgetRepository.findByBudgetDate(today)
-            .orElseGet { DailyBudget(budgetDate = today) }
+        val budget =
+            budgetRepository
+                .findByBudgetDate(today)
+                .orElseGet { DailyBudget(budgetDate = today) }
         budget.totalBudget = request.totalBudget
         val saved = budgetRepository.save(budget)
         return toResponse(saved)
@@ -32,15 +33,16 @@ class BudgetService(
 
     /** 오늘 예산 조회/생성 (내부용) */
     @Transactional
-    fun getOrCreateBudget(date: LocalDate): DailyBudget {
-        return budgetRepository.findByBudgetDate(date)
+    fun getOrCreateBudget(date: LocalDate): DailyBudget =
+        budgetRepository
+            .findByBudgetDate(date)
             .orElseGet { budgetRepository.save(DailyBudget(budgetDate = date)) }
-    }
 
-    private fun toResponse(budget: DailyBudget) = BudgetResponse(
-        date = budget.budgetDate,
-        totalBudget = budget.totalBudget,
-        usedBudget = budget.usedBudget,
-        remainingBudget = budget.remainingBudget,
-    )
+    private fun toResponse(budget: DailyBudget) =
+        BudgetResponse(
+            date = budget.budgetDate,
+            totalBudget = budget.totalBudget,
+            usedBudget = budget.usedBudget,
+            remainingBudget = budget.remainingBudget,
+        )
 }

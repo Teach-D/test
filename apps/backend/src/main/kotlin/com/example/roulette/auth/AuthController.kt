@@ -22,10 +22,11 @@ class AuthController(
     private val authService: AuthService,
     private val jwtProvider: JwtProvider,
 ) {
-
     @Operation(summary = "로그인", description = "닉네임으로 로그인합니다. 없는 닉네임이면 자동으로 회원가입됩니다.")
     @PostMapping("/login")
-    fun login(@Valid @RequestBody request: LoginRequest): ResponseEntity<ApiResponse<LoginResponse>> {
+    fun login(
+        @Valid @RequestBody request: LoginRequest,
+    ): ResponseEntity<ApiResponse<LoginResponse>> {
         val response = authService.login(request)
         return ResponseEntity.ok(ApiResponse.success(response))
     }
@@ -35,12 +36,13 @@ class AuthController(
     fun debug(request: HttpServletRequest): ResponseEntity<ApiResponse<Map<String, Any?>>> {
         val authHeader = request.getHeader("Authorization")
         val token = if (authHeader?.startsWith("Bearer ") == true) authHeader.substring(7) else null
-        val result = mutableMapOf<String, Any?>(
-            "hasAuthHeader" to (authHeader != null),
-            "authHeaderPrefix" to authHeader?.take(10),
-            "tokenLength" to token?.length,
-            "securityContextAuth" to SecurityContextHolder.getContext().authentication?.toString(),
-        )
+        val result =
+            mutableMapOf<String, Any?>(
+                "hasAuthHeader" to (authHeader != null),
+                "authHeaderPrefix" to authHeader?.take(10),
+                "tokenLength" to token?.length,
+                "securityContextAuth" to SecurityContextHolder.getContext().authentication?.toString(),
+            )
         if (token != null) {
             try {
                 val isValid = jwtProvider.isValid(token)

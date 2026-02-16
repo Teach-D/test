@@ -15,9 +15,13 @@ class JwtProvider(
     private val key: SecretKey = Keys.hmacShaKeyFor(secret.toByteArray())
 
     /** JWT 토큰 생성 */
-    fun createToken(memberId: Long, role: String): String {
+    fun createToken(
+        memberId: Long,
+        role: String,
+    ): String {
         val now = Date()
-        return Jwts.builder()
+        return Jwts
+            .builder()
             .subject(memberId.toString())
             .claim("role", role)
             .issuedAt(now)
@@ -27,25 +31,25 @@ class JwtProvider(
     }
 
     /** 토큰에서 회원 ID 추출 */
-    fun getMemberId(token: String): Long {
-        return getClaims(token).subject.toLong()
-    }
+    fun getMemberId(token: String): Long = getClaims(token).subject.toLong()
 
     /** 토큰에서 역할 추출 */
-    fun getRole(token: String): String {
-        return getClaims(token).get("role", String::class.java)
-    }
+    fun getRole(token: String): String = getClaims(token).get("role", String::class.java)
 
     /** 토큰 유효성 검증 */
-    fun isValid(token: String): Boolean {
-        return try {
+    fun isValid(token: String): Boolean =
+        try {
             getClaims(token)
             true
         } catch (e: Exception) {
             false
         }
-    }
 
     private fun getClaims(token: String) =
-        Jwts.parser().verifyWith(key).build().parseSignedClaims(token).payload
+        Jwts
+            .parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .payload
 }

@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test
 import java.util.*
 
 class AuthServiceTest {
-
     private lateinit var memberRepository: MemberRepository
     private lateinit var jwtProvider: JwtProvider
     private lateinit var authService: AuthService

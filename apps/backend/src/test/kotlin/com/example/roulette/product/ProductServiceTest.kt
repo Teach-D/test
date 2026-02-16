@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test
 import java.util.*
 
 class ProductServiceTest {
-
     private lateinit var productRepository: ProductRepository
     private lateinit var productService: ProductService
 
@@ -61,18 +60,20 @@ class ProductServiceTest {
         every { productRepository.findById(999L) } returns Optional.empty()
 
         // when & then
-        val exception = assertThrows(BusinessException::class.java) {
-            productService.update(999L, ProductUpdateRequest(name = "없는상품"))
-        }
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                productService.update(999L, ProductUpdateRequest(name = "없는상품"))
+            }
         assertEquals(ErrorCode.PRODUCT_NOT_FOUND, exception.errorCode)
     }
 
     @Test
     fun `활성 상품만 사용자에게 노출된다`() {
         // given
-        val products = listOf(
-            Product(name = "커피", price = 3000, stock = 10, isActive = true, id = 1L),
-        )
+        val products =
+            listOf(
+                Product(name = "커피", price = 3000, stock = 10, isActive = true, id = 1L),
+            )
         every { productRepository.findByIsActiveTrueOrderByCreatedAtDesc() } returns products
 
         // when

@@ -6,7 +6,6 @@ import java.time.LocalDate
 import java.util.Optional
 
 interface RouletteRepository : JpaRepository<RouletteHistory, Long> {
-
     /** 특정 회원의 특정 날짜 참여 기록 (취소되지 않은 것) */
     fun findByMemberIdAndPlayedAtAndIsCancelledFalse(
         memberId: Long,

@@ -19,7 +19,6 @@ import java.time.LocalDateTime
 import java.util.*
 
 class RouletteServiceTest {
-
     private lateinit var rouletteRepository: RouletteRepository
     private lateinit var budgetRepository: BudgetRepository
     private lateinit var budgetService: BudgetService
@@ -45,10 +44,14 @@ class RouletteServiceTest {
         every { rouletteRepository.existsByMemberIdAndPlayedAtAndIsCancelledFalse(memberId, today) } returns false
         every { budgetRepository.findByBudgetDateWithLock(today) } returns Optional.of(budget)
         every { rouletteRepository.saveAndFlush(any()) } answers { firstArg() }
-        every { pointService.grant(any(), any()) } returns Point(
-            memberId = memberId, amount = 100, remainingAmount = 100,
-            expiresAt = LocalDateTime.now().plusDays(30), id = 1L,
-        )
+        every { pointService.grant(any(), any()) } returns
+            Point(
+                memberId = memberId,
+                amount = 100,
+                remainingAmount = 100,
+                expiresAt = LocalDateTime.now().plusDays(30),
+                id = 1L,
+            )
 
         // when
         val result = rouletteService.spin(memberId)
@@ -67,9 +70,10 @@ class RouletteServiceTest {
         every { rouletteRepository.existsByMemberIdAndPlayedAtAndIsCancelledFalse(memberId, today) } returns true
 
         // when & then
-        val exception = assertThrows(BusinessException::class.java) {
-            rouletteService.spin(memberId)
-        }
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                rouletteService.spin(memberId)
+            }
         assertEquals(ErrorCode.ROULETTE_ALREADY_PLAYED, exception.errorCode)
     }
 
@@ -84,9 +88,10 @@ class RouletteServiceTest {
         every { budgetRepository.findByBudgetDateWithLock(today) } returns Optional.of(budget)
 
         // when & then
-        val exception = assertThrows(BusinessException::class.java) {
-            rouletteService.spin(memberId)
-        }
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                rouletteService.spin(memberId)
+            }
         assertEquals(ErrorCode.BUDGET_EXCEEDED, exception.errorCode)
     }
 
@@ -97,10 +102,14 @@ class RouletteServiceTest {
         val today = LocalDate.now()
         val history = RouletteHistory(memberId = 1L, point = 500, playedAt = today, id = historyId)
         val budget = DailyBudget(budgetDate = today, totalBudget = 100_000, usedBudget = 500, id = 1L)
-        val point = Point(
-            memberId = 1L, amount = 500, remainingAmount = 500,
-            expiresAt = LocalDateTime.now().plusDays(30), id = 10L,
-        )
+        val point =
+            Point(
+                memberId = 1L,
+                amount = 500,
+                remainingAmount = 500,
+                expiresAt = LocalDateTime.now().plusDays(30),
+                id = 10L,
+            )
 
         every { rouletteRepository.findById(historyId) } returns Optional.of(history)
         every { budgetRepository.findByBudgetDateWithLock(today) } returns Optional.of(budget)

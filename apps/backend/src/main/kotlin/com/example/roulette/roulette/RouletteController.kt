@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*
 class RouletteController(
     private val rouletteService: RouletteService,
 ) {
-
     @Operation(summary = "룰렛 돌리기", description = "오늘의 룰렛을 돌려 포인트를 획득합니다. (1일 1회)")
     @PostMapping("/api/roulette/spin")
     fun spin(authentication: Authentication): ResponseEntity<ApiResponse<RouletteResultResponse>> {
@@ -32,13 +31,14 @@ class RouletteController(
 
     @Operation(summary = "전체 룰렛 참여 내역 조회 (어드민)", description = "전체 룰렛 참여 내역을 조회합니다.")
     @GetMapping("/api/admin/roulette/histories")
-    fun getAllHistories(): ResponseEntity<ApiResponse<List<RouletteHistoryResponse>>> {
-        return ResponseEntity.ok(ApiResponse.success(rouletteService.getAllHistories()))
-    }
+    fun getAllHistories(): ResponseEntity<ApiResponse<List<RouletteHistoryResponse>>> =
+        ResponseEntity.ok(ApiResponse.success(rouletteService.getAllHistories()))
 
     @Operation(summary = "룰렛 참여 취소 (어드민)", description = "룰렛 참여를 취소하고 포인트를 회수합니다.")
     @PostMapping("/api/admin/roulette/{historyId}/cancel")
-    fun cancel(@PathVariable historyId: Long): ResponseEntity<ApiResponse<String>> {
+    fun cancel(
+        @PathVariable historyId: Long,
+    ): ResponseEntity<ApiResponse<String>> {
         rouletteService.cancel(historyId)
         return ResponseEntity.ok(ApiResponse.success("룰렛 참여가 취소되었습니다."))
     }

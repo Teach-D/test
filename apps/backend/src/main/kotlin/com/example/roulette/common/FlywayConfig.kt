@@ -13,12 +13,10 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration
 class FlywayConfig {
-
     @Bean
-    fun flywayMigrationStrategy(): FlywayMigrationStrategy {
-        return FlywayMigrationStrategy { flyway ->
+    fun flywayMigrationStrategy(): FlywayMigrationStrategy =
+        FlywayMigrationStrategy { flyway ->
             flyway.repair()
             flyway.migrate()
         }
-    }
 }

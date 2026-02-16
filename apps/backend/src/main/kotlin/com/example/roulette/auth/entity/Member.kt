@@ -8,16 +8,15 @@ import jakarta.persistence.*
 class Member(
     @Column(nullable = false, unique = true, length = 50)
     val nickname: String,
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     val role: MemberRole = MemberRole.USER,
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 ) : BaseTimeEntity()
 
 enum class MemberRole {
-    USER, ADMIN
+    USER,
+    ADMIN,
 }

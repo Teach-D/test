@@ -4,7 +4,6 @@ import com.example.roulette.common.exception.BusinessException
 import com.example.roulette.common.exception.ErrorCode
 import com.example.roulette.order.dto.OrderRequest
 import com.example.roulette.order.entity.Order
-import com.example.roulette.order.entity.OrderStatus
 import com.example.roulette.order.entity.PointUsage
 import com.example.roulette.point.PointService
 import com.example.roulette.product.ProductService
@@ -18,7 +17,6 @@ import org.junit.jupiter.api.Test
 import java.util.*
 
 class OrderServiceTest {
-
     private lateinit var orderRepository: OrderRepository
     private lateinit var pointUsageRepository: PointUsageRepository
     private lateinit var productService: ProductService
@@ -41,9 +39,13 @@ class OrderServiceTest {
         val product = Product(name = "커피", price = 3000, stock = 10, id = 1L)
         every { productService.getProduct(1L) } returns product
         every { pointService.deduct(memberId, 3000) } returns listOf(1L to 2000, 2L to 1000)
-        every { orderRepository.save(any()) } returns Order(
-            memberId = memberId, productId = 1L, usedPoint = 3000, id = 1L,
-        )
+        every { orderRepository.save(any()) } returns
+            Order(
+                memberId = memberId,
+                productId = 1L,
+                usedPoint = 3000,
+                id = 1L,
+            )
         every { pointUsageRepository.save(any<PointUsage>()) } answers { firstArg() }
 
         // when
@@ -63,9 +65,10 @@ class OrderServiceTest {
         every { productService.getProduct(1L) } returns product
 
         // when & then
-        val exception = assertThrows(BusinessException::class.java) {
-            orderService.placeOrder(1L, OrderRequest(productId = 1L))
-        }
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                orderService.placeOrder(1L, OrderRequest(productId = 1L))
+            }
         assertEquals(ErrorCode.PRODUCT_NOT_ACTIVE, exception.errorCode)
     }
 
@@ -76,9 +79,10 @@ class OrderServiceTest {
         every { productService.getProduct(1L) } returns product
 
         // when & then
-        val exception = assertThrows(BusinessException::class.java) {
-            orderService.placeOrder(1L, OrderRequest(productId = 1L))
-        }
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                orderService.placeOrder(1L, OrderRequest(productId = 1L))
+            }
         assertEquals(ErrorCode.PRODUCT_OUT_OF_STOCK, exception.errorCode)
     }
 
@@ -110,9 +114,10 @@ class OrderServiceTest {
         every { orderRepository.findById(1L) } returns Optional.of(order)
 
         // when & then
-        val exception = assertThrows(BusinessException::class.java) {
-            orderService.cancelOrder(1L)
-        }
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                orderService.cancelOrder(1L)
+            }
         assertEquals(ErrorCode.ORDER_ALREADY_CANCELLED, exception.errorCode)
     }
 }

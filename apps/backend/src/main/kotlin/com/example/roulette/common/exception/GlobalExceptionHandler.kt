@@ -8,27 +8,25 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
-
     @ExceptionHandler(BusinessException::class)
-    fun handleBusinessException(e: BusinessException): ResponseEntity<ApiResponse<Nothing>> {
-        return ResponseEntity
+    fun handleBusinessException(e: BusinessException): ResponseEntity<ApiResponse<Nothing>> =
+        ResponseEntity
             .status(e.errorCode.status)
             .body(ApiResponse.error(e.errorCode.name, e.errorCode.message))
-    }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidationException(e: MethodArgumentNotValidException): ResponseEntity<ApiResponse<Nothing>> {
-        val message = e.bindingResult.fieldErrors
-            .joinToString(", ") { "${it.field}: ${it.defaultMessage}" }
+        val message =
+            e.bindingResult.fieldErrors
+                .joinToString(", ") { "${it.field}: ${it.defaultMessage}" }
         return ResponseEntity
             .badRequest()
             .body(ApiResponse.error("VALIDATION_ERROR", message))
     }
 
     @ExceptionHandler(Exception::class)
-    fun handleException(e: Exception): ResponseEntity<ApiResponse<Nothing>> {
-        return ResponseEntity
+    fun handleException(e: Exception): ResponseEntity<ApiResponse<Nothing>> =
+        ResponseEntity
             .internalServerError()
             .body(ApiResponse.error("INTERNAL_ERROR", "${e.javaClass.simpleName}: ${e.message}"))
-    }
 }

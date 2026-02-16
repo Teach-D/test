@@ -7,6 +7,11 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "12.1.2"
 }
 
+ktlint {
+    version.set("1.5.0")
+    android.set(false)
+}
+
 group = "com.example"
 version = "0.0.1-SNAPSHOT"
 

@@ -1,6 +1,9 @@
 package com.example.roulette.common.exception
 
-enum class ErrorCode(val status: Int, val message: String) {
+enum class ErrorCode(
+    val status: Int,
+    val message: String,
+) {
     // 인증
     UNAUTHORIZED(401, "인증이 필요합니다."),
     FORBIDDEN(403, "권한이 없습니다."),

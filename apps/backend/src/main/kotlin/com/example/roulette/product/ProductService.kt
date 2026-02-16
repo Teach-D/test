@@ -13,38 +13,43 @@ import org.springframework.transaction.annotation.Transactional
 class ProductService(
     private val productRepository: ProductRepository,
 ) {
-
     /** 활성 상품 목록 (사용자용) */
     @Transactional(readOnly = true)
-    fun getActiveProducts(): List<ProductResponse> {
-        return productRepository.findByIsActiveTrueOrderByCreatedAtDesc()
+    fun getActiveProducts(): List<ProductResponse> =
+        productRepository
+            .findByIsActiveTrueOrderByCreatedAtDesc()
             .map { toResponse(it) }
-    }
 
     /** 전체 상품 목록 (어드민용) */
     @Transactional(readOnly = true)
-    fun getAllProducts(): List<ProductResponse> {
-        return productRepository.findAllByOrderByCreatedAtDesc()
+    fun getAllProducts(): List<ProductResponse> =
+        productRepository
+            .findAllByOrderByCreatedAtDesc()
             .map { toResponse(it) }
-    }
 
     /** 상품 등록 (어드민) */
     @Transactional
     fun create(request: ProductCreateRequest): ProductResponse {
-        val product = Product(
-            name = request.name,
-            description = request.description,
-            price = request.price,
-            stock = request.stock,
-        )
+        val product =
+            Product(
+                name = request.name,
+                description = request.description,
+                price = request.price,
+                stock = request.stock,
+            )
         return toResponse(productRepository.save(product))
     }
 
     /** 상품 수정 (어드민) */
     @Transactional
-    fun update(productId: Long, request: ProductUpdateRequest): ProductResponse {
-        val product = productRepository.findById(productId)
-            .orElseThrow { BusinessException(ErrorCode.PRODUCT_NOT_FOUND) }
+    fun update(
+        productId: Long,
+        request: ProductUpdateRequest,
+    ): ProductResponse {
+        val product =
+            productRepository
+                .findById(productId)
+                .orElseThrow { BusinessException(ErrorCode.PRODUCT_NOT_FOUND) }
 
         request.name?.let { product.name = it }
         request.description?.let { product.description = it }
@@ -57,17 +62,18 @@ class ProductService(
 
     /** 상품 단건 조회 */
     @Transactional(readOnly = true)
-    fun getProduct(productId: Long): Product {
-        return productRepository.findById(productId)
+    fun getProduct(productId: Long): Product =
+        productRepository
+            .findById(productId)
             .orElseThrow { BusinessException(ErrorCode.PRODUCT_NOT_FOUND) }
-    }
 
-    private fun toResponse(product: Product) = ProductResponse(
-        id = product.id,
-        name = product.name,
-        description = product.description,
-        price = product.price,
-        stock = product.stock,
-        isActive = product.isActive,
-    )
+    private fun toResponse(product: Product) =
+        ProductResponse(
+            id = product.id,
+            name = product.name,
+            description = product.description,
+            price = product.price,
+            stock = product.stock,
+            isActive = product.isActive,
+        )
 }

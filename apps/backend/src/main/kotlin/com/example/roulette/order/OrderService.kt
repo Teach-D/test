@@ -18,10 +18,12 @@ class OrderService(
     private val productService: ProductService,
     private val pointService: PointService,
 ) {
-
     /** 상품 주문 (포인트 차감) */
     @Transactional
-    fun placeOrder(memberId: Long, request: OrderRequest): OrderResponse {
+    fun placeOrder(
+        memberId: Long,
+        request: OrderRequest,
+    ): OrderResponse {
         val product = productService.getProduct(request.productId)
 
         // 상품 유효성 체크
@@ -39,13 +41,14 @@ class OrderService(
         product.decreaseStock()
 
         // 주문 생성
-        val order = orderRepository.save(
-            Order(
-                memberId = memberId,
-                productId = product.id,
-                usedPoint = product.price,
+        val order =
+            orderRepository.save(
+                Order(
+                    memberId = memberId,
+                    productId = product.id,
+                    usedPoint = product.price,
+                ),
             )
-        )
 
         // 포인트 사용 내역 저장
         usages.forEach { (pointId, amount) ->
@@ -58,8 +61,10 @@ class OrderService(
     /** 주문 취소 (어드민 — 포인트 환불) */
     @Transactional
     fun cancelOrder(orderId: Long): OrderResponse {
-        val order = orderRepository.findById(orderId)
-            .orElseThrow { BusinessException(ErrorCode.ORDER_NOT_FOUND) }
+        val order =
+            orderRepository
+                .findById(orderId)
+                .orElseThrow { BusinessException(ErrorCode.ORDER_NOT_FOUND) }
 
         if (order.status == com.example.roulette.order.entity.OrderStatus.CANCELLED) {
             throw BusinessException(ErrorCode.ORDER_ALREADY_CANCELLED)
@@ -69,8 +74,10 @@ class OrderService(
         order.cancel()
 
         // 2. 포인트 환불
-        val usages = pointUsageRepository.findByOrderId(orderId)
-            .map { it.pointId to it.amount }
+        val usages =
+            pointUsageRepository
+                .findByOrderId(orderId)
+                .map { it.pointId to it.amount }
         pointService.restore(usages)
 
         // 3. 재고 복원
@@ -82,25 +89,28 @@ class OrderService(
 
     /** 내 주문 내역 조회 */
     @Transactional(readOnly = true)
-    fun getMyOrders(memberId: Long): List<OrderResponse> {
-        return orderRepository.findByMemberIdOrderByOrderedAtDesc(memberId)
+    fun getMyOrders(memberId: Long): List<OrderResponse> =
+        orderRepository
+            .findByMemberIdOrderByOrderedAtDesc(memberId)
             .map { order ->
                 val product = productService.getProduct(order.productId)
                 toResponse(order, product.name)
             }
-    }
 
     /** 전체 주문 목록 조회 (어드민) */
     @Transactional(readOnly = true)
-    fun getAllOrders(): List<OrderResponse> {
-        return orderRepository.findAllByOrderByOrderedAtDesc()
+    fun getAllOrders(): List<OrderResponse> =
+        orderRepository
+            .findAllByOrderByOrderedAtDesc()
             .map { order ->
                 val product = productService.getProduct(order.productId)
                 toResponse(order, product.name)
             }
-    }
 
-    private fun toResponse(order: Order, productName: String) = OrderResponse(
+    private fun toResponse(
+        order: Order,
+        productName: String,
+    ) = OrderResponse(
         id = order.id,
         productId = order.productId,
         productName = productName,
