@@ -39,11 +39,9 @@ class RouletteConcurrencyIntegrationTest {
     private lateinit var pointRepository: PointRepository
 
     private lateinit var testMember: Member
-    private val today = LocalDate.now()
 
     @BeforeEach
     fun setUp() {
-        // 테스트용 회원 생성
         testMember =
             memberRepository.save(
                 Member(nickname = "concurrency_test_user_${System.nanoTime()}", role = MemberRole.USER),
@@ -52,7 +50,6 @@ class RouletteConcurrencyIntegrationTest {
 
     @AfterEach
     fun tearDown() {
-        // 데이터 정리 (역순으로 삭제)
         pointRepository.deleteAll()
         rouletteRepository.deleteAll()
         budgetRepository.deleteAll()
@@ -61,8 +58,7 @@ class RouletteConcurrencyIntegrationTest {
 
     @Test
     fun `같은 유저가 하루에 두 번 룰렛을 돌리면 두 번째는 실패한다`() {
-        // given — 충분한 예산 설정
-        budgetRepository.save(DailyBudget(budgetDate = today, totalBudget = 100_000))
+        // given — 예산은 서비스가 자동 생성 (DEFAULT_BUDGET)
 
         // when — 첫 번째 참여: 성공
         val result = rouletteService.spin(testMember.id)
@@ -75,14 +71,12 @@ class RouletteConcurrencyIntegrationTest {
             }
         assertEquals(ErrorCode.ROULETTE_ALREADY_PLAYED, exception.errorCode)
 
-        // DB 검증 — 정확히 1개의 참여 기록만 존재
-        val todayHistories =
+        // DB 검증 — 해당 멤버의 참여 기록이 정확히 1개
+        val memberHistories =
             rouletteRepository
                 .findAllByOrderByPlayedAtDesc()
-                .filter {
-                    it.memberId == testMember.id && it.playedAt == today && !it.isCancelled
-                }
-        assertEquals(1, todayHistories.size, "DB에 정확히 1개의 참여 기록만 있어야 함")
+                .filter { it.memberId == testMember.id && !it.isCancelled }
+        assertEquals(1, memberHistories.size, "DB에 정확히 1개의 참여 기록만 있어야 함")
     }
 
     @Test
@@ -93,6 +87,7 @@ class RouletteConcurrencyIntegrationTest {
         val executor = Executors.newFixedThreadPool(userCount)
         val latch = CountDownLatch(userCount)
         val successCount = AtomicInteger(0)
+        val today = LocalDate.now() // @PostConstruct 이후이므로 KST 기준
 
         // 작은 예산 설정
         budgetRepository.save(DailyBudget(budgetDate = today, totalBudget = smallBudget))
@@ -135,11 +130,12 @@ class RouletteConcurrencyIntegrationTest {
         )
 
         // 실제 지급된 포인트 합계 검증
-        val todayHistories =
+        val memberIds = members.map { it.id }.toSet()
+        val grantedHistories =
             rouletteRepository
                 .findAllByOrderByPlayedAtDesc()
-                .filter { it.playedAt == today && !it.isCancelled }
-        val totalGrantedPoints = todayHistories.sumOf { it.point }
+                .filter { it.memberId in memberIds && !it.isCancelled }
+        val totalGrantedPoints = grantedHistories.sumOf { it.point }
         assertTrue(
             totalGrantedPoints <= smallBudget,
             "실제 지급 포인트 합계($totalGrantedPoints)가 예산($smallBudget)을 초과하면 안 됨",
