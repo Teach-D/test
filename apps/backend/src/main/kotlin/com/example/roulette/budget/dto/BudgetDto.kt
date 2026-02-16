@@ -8,6 +8,7 @@ data class BudgetResponse(
     val totalBudget: Int,
     val usedBudget: Int,
     val remainingBudget: Int,
+    val todayParticipants: Int,
 )
 
 data class BudgetSetRequest(

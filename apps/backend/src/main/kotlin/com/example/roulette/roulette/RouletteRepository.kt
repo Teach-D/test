@@ -20,4 +20,7 @@ interface RouletteRepository : JpaRepository<RouletteHistory, Long> {
 
     /** 전체 룰렛 참여 내역 조회 (어드민) */
     fun findAllByOrderByPlayedAtDesc(): List<RouletteHistory>
+
+    /** 오늘 참여자 수 (취소되지 않은 것만) */
+    fun countByPlayedAtAndIsCancelledFalse(playedAt: LocalDate): Int
 }

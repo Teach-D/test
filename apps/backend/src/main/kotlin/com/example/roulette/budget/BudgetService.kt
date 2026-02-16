@@ -3,6 +3,7 @@ package com.example.roulette.budget
 import com.example.roulette.budget.dto.BudgetResponse
 import com.example.roulette.budget.dto.BudgetSetRequest
 import com.example.roulette.budget.entity.DailyBudget
+import com.example.roulette.roulette.RouletteRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -10,6 +11,7 @@ import java.time.LocalDate
 @Service
 class BudgetService(
     private val budgetRepository: BudgetRepository,
+    private val rouletteRepository: RouletteRepository,
 ) {
     /** 오늘 예산 조회 (없으면 기본값으로 생성) */
     @Transactional
@@ -38,11 +40,14 @@ class BudgetService(
             .findByBudgetDate(date)
             .orElseGet { budgetRepository.save(DailyBudget(budgetDate = date)) }
 
-    private fun toResponse(budget: DailyBudget) =
-        BudgetResponse(
+    private fun toResponse(budget: DailyBudget): BudgetResponse {
+        val todayParticipants = rouletteRepository.countByPlayedAtAndIsCancelledFalse(budget.budgetDate)
+        return BudgetResponse(
             date = budget.budgetDate,
             totalBudget = budget.totalBudget,
             usedBudget = budget.usedBudget,
             remainingBudget = budget.remainingBudget,
+            todayParticipants = todayParticipants,
         )
+    }
 }
