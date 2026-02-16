@@ -2,6 +2,7 @@ package com.example.roulette.budget
 
 import com.example.roulette.budget.dto.BudgetSetRequest
 import com.example.roulette.budget.entity.DailyBudget
+import com.example.roulette.roulette.RouletteRepository
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -13,12 +14,14 @@ import java.util.*
 
 class BudgetServiceTest {
     private lateinit var budgetRepository: BudgetRepository
+    private lateinit var rouletteRepository: RouletteRepository
     private lateinit var budgetService: BudgetService
 
     @BeforeEach
     fun setUp() {
         budgetRepository = mockk()
-        budgetService = BudgetService(budgetRepository)
+        rouletteRepository = mockk()
+        budgetService = BudgetService(budgetRepository, rouletteRepository)
     }
 
     @Test
@@ -28,6 +31,7 @@ class BudgetServiceTest {
         val defaultBudget = DailyBudget(budgetDate = today, id = 1L)
         every { budgetRepository.findByBudgetDate(today) } returns Optional.empty()
         every { budgetRepository.save(any()) } returns defaultBudget
+        every { rouletteRepository.countByPlayedAtAndIsCancelledFalse(today) } returns 0
 
         // when
         val result = budgetService.getTodayBudget()
@@ -37,6 +41,7 @@ class BudgetServiceTest {
         assertEquals(100_000, result.totalBudget)
         assertEquals(0, result.usedBudget)
         assertEquals(100_000, result.remainingBudget)
+        assertEquals(0, result.todayParticipants)
     }
 
     @Test
@@ -47,11 +52,13 @@ class BudgetServiceTest {
         every { budgetRepository.findByBudgetDate(today) } returns Optional.of(budget)
         val savedSlot = slot<DailyBudget>()
         every { budgetRepository.save(capture(savedSlot)) } answers { savedSlot.captured }
+        every { rouletteRepository.countByPlayedAtAndIsCancelledFalse(today) } returns 5
 
         // when
         val result = budgetService.setTodayBudget(BudgetSetRequest(totalBudget = 200_000))
 
         // then
         assertEquals(200_000, result.totalBudget)
+        assertEquals(5, result.todayParticipants)
     }
 }
