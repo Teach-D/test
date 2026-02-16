@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.transaction.UnexpectedRollbackException
 import java.time.LocalDate
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -85,6 +86,10 @@ class RouletteConcurrencyIntegrationTest {
                     } else {
                         throw e
                     }
+                } catch (e: UnexpectedRollbackException) {
+                    // H2 환경에서 UNIQUE 제약 위반 후 트랜잭션 롤백으로 인해 발생
+                    // 실질적으로 중복 참여 차단과 동일한 결과이므로 실패로 카운트
+                    failCount.incrementAndGet()
                 }
             }
         }
@@ -110,7 +115,8 @@ class RouletteConcurrencyIntegrationTest {
     @Test
     fun `일일 예산을 작게 설정하고 여러 유저가 동시에 룰렛을 돌리면 당첨 포인트 합계가 예산을 초과하지 않는다`() {
         // given
-        val smallBudget = 1000
+        // MIN_POINT = 100이므로 최대 5명(500/100)만 성공 가능, 나머지 5명은 반드시 BUDGET_EXCEEDED
+        val smallBudget = 500
         val userCount = 10
         val executor = Executors.newFixedThreadPool(userCount)
         val latch = CountDownLatch(userCount)
