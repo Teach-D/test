@@ -36,7 +36,8 @@ export function RouletteWheel({
 
       const segmentAngle = 360 / SEGMENTS.length;
       // 3~5바퀴 회전 + 목표 세그먼트 각도
-      const fullRotations = 360 * (3 + Math.random() * 2);
+      const extraSpins = 3 + Math.floor(Math.random() * 3); // 3, 4, 5 중 랜덤
+      const fullRotations = 360 * extraSpins;
       const targetAngle = segmentIndex * segmentAngle;
       // 세그먼트 중앙을 가리키도록 보정 (포인터가 위쪽에 있으므로)
       const finalRotation = fullRotations + (360 - targetAngle) - segmentAngle / 2;
@@ -56,7 +57,7 @@ export function RouletteWheel({
     <div className="relative flex items-center justify-center">
       {/* 포인터 (위쪽) */}
       <div className="absolute left-1/2 top-0 z-20 -translate-x-1/2 -translate-y-2">
-        <div className="h-0 w-0 border-l-8 border-r-8 border-t-16 border-l-transparent border-r-transparent border-t-red-600"></div>
+        <div className="h-0 w-0 border-l-[8px] border-r-[8px] border-t-[16px] border-l-transparent border-r-transparent border-t-red-600"></div>
       </div>
 
       {/* 룰렛 휠 */}
