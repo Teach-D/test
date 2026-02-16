@@ -1,5 +1,6 @@
 import { type ReactElement, useState } from 'react';
 import { RouletteWheel } from './roulette-wheel';
+import { ExpiringPointsBanner } from './expiring-points-banner';
 import { useRouletteStatus, useTodayBudget, useSpinRoulette } from '../hooks/use-roulette';
 import type { RouletteResultResponse } from '@/common/types/api';
 import { LoadingSpinner } from '@/common/components/loading-spinner';
@@ -72,6 +73,9 @@ export function RoulettePage(): ReactElement {
 
   return (
     <div className="flex min-h-full flex-col p-4">
+      {/* 7일 내 만료 예정 포인트 알림 배너 — 만료 예정 포인트가 있을 때만 표시 */}
+      <ExpiringPointsBanner />
+
       {/* 헤더 카드 */}
       <div className="mb-6 overflow-hidden rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white shadow-lg">
         <h2 className="mb-2 text-xl font-bold">매일 룰렛 이벤트 🎰</h2>
