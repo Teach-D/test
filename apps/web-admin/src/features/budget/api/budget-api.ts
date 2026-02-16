@@ -6,6 +6,7 @@ export interface BudgetResponse {
   totalBudget: number;
   usedBudget: number;
   remainingBudget: number;
+  todayParticipants: number;
 }
 
 export interface RouletteHistory {

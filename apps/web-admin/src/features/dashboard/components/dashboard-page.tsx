@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Card, Col, Row, Statistic, Spin, message } from 'antd';
-import { DollarOutlined, TeamOutlined, GiftOutlined, PercentageOutlined } from '@ant-design/icons';
+import { DollarOutlined, TeamOutlined, GiftOutlined, PercentageOutlined, UserOutlined } from '@ant-design/icons';
 import { getTodayBudget, type BudgetResponse } from '../../budget/api/budget-api';
 
 export function DashboardPage(): React.ReactElement {
@@ -60,6 +60,17 @@ export function DashboardPage(): React.ReactElement {
               prefix={<TeamOutlined />}
               suffix="P"
               valueStyle={{ color: '#3f8600' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="오늘 참여자"
+              value={budget?.todayParticipants ?? 0}
+              prefix={<UserOutlined />}
+              suffix="명"
+              valueStyle={{ color: '#1677ff' }}
             />
           </Card>
         </Col>
