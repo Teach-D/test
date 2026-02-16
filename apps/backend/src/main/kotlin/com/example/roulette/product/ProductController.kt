@@ -39,4 +39,13 @@ class ProductController(
         @Valid @RequestBody request: ProductUpdateRequest,
     ): ResponseEntity<ApiResponse<ProductResponse>> =
         ResponseEntity.ok(ApiResponse.success(productService.update(productId, request)))
+
+    @Operation(summary = "상품 삭제 (어드민)", description = "주문 내역이 없는 상품을 삭제합니다.")
+    @DeleteMapping("/api/admin/products/{productId}")
+    fun delete(
+        @PathVariable productId: Long,
+    ): ResponseEntity<ApiResponse<Unit>> {
+        productService.delete(productId)
+        return ResponseEntity.ok(ApiResponse.success(Unit))
+    }
 }

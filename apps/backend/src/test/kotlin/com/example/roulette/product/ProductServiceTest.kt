@@ -2,12 +2,15 @@ package com.example.roulette.product
 
 import com.example.roulette.common.exception.BusinessException
 import com.example.roulette.common.exception.ErrorCode
+import com.example.roulette.order.OrderRepository
 import com.example.roulette.product.dto.ProductCreateRequest
 import com.example.roulette.product.dto.ProductUpdateRequest
 import com.example.roulette.product.entity.Product
 import io.mockk.every
+import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -15,12 +18,14 @@ import java.util.*
 
 class ProductServiceTest {
     private lateinit var productRepository: ProductRepository
+    private lateinit var orderRepository: OrderRepository
     private lateinit var productService: ProductService
 
     @BeforeEach
     fun setUp() {
         productRepository = mockk()
-        productService = ProductService(productRepository)
+        orderRepository = mockk()
+        productService = ProductService(productRepository, orderRepository)
     }
 
     @Test
@@ -82,5 +87,48 @@ class ProductServiceTest {
         // then
         assertEquals(1, result.size)
         assertTrue(result.all { it.isActive })
+    }
+
+    @Test
+    fun `주문 내역이 없는 상품은 정상적으로 삭제된다`() {
+        // given
+        val product = Product(name = "커피", price = 3000, stock = 10, id = 1L)
+        every { productRepository.findById(1L) } returns Optional.of(product)
+        every { orderRepository.existsByProductId(1L) } returns false
+        justRun { productRepository.delete(product) }
+
+        // when
+        productService.delete(1L)
+
+        // then
+        verify { productRepository.delete(product) }
+    }
+
+    @Test
+    fun `주문 내역이 있는 상품을 삭제하면 PRODUCT_HAS_ORDERS 예외를 던진다`() {
+        // given
+        val product = Product(name = "커피", price = 3000, stock = 10, id = 1L)
+        every { productRepository.findById(1L) } returns Optional.of(product)
+        every { orderRepository.existsByProductId(1L) } returns true
+
+        // when & then
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                productService.delete(1L)
+            }
+        assertEquals(ErrorCode.PRODUCT_HAS_ORDERS, exception.errorCode)
+    }
+
+    @Test
+    fun `존재하지 않는 상품을 삭제하면 PRODUCT_NOT_FOUND 예외를 던진다`() {
+        // given
+        every { productRepository.findById(999L) } returns Optional.empty()
+
+        // when & then
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                productService.delete(999L)
+            }
+        assertEquals(ErrorCode.PRODUCT_NOT_FOUND, exception.errorCode)
     }
 }

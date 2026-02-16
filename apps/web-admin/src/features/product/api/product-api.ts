@@ -39,3 +39,7 @@ export async function updateProduct(id: number, data: ProductUpdateRequest): Pro
   const response = await client.patch<ApiResponse<Product>>(`/api/admin/products/${id}`, data);
   return response.data.data!;
 }
+
+export async function deleteProduct(id: number): Promise<void> {
+  await client.delete(`/api/admin/products/${id}`);
+}

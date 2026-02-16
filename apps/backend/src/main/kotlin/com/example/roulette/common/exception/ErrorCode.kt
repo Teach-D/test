@@ -29,6 +29,7 @@ enum class ErrorCode(
     PRODUCT_NOT_FOUND(404, "상품을 찾을 수 없습니다."),
     PRODUCT_OUT_OF_STOCK(400, "상품 재고가 부족합니다."),
     PRODUCT_NOT_ACTIVE(400, "판매 중이 아닌 상품입니다."),
+    PRODUCT_HAS_ORDERS(400, "주문 내역이 있는 상품은 삭제할 수 없습니다. 비활성화를 이용해주세요."),
 
     // 주문
     ORDER_NOT_FOUND(404, "주문을 찾을 수 없습니다."),

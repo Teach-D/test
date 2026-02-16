@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, InputNumber, Switch, Space, Tag, Popconfirm, message } from 'antd';
-import { PlusOutlined, EditOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { getAllProducts, createProduct, updateProduct, type Product, type ProductCreateRequest } from '../api/product-api';
+import { getAllProducts, createProduct, updateProduct, deleteProduct, type Product, type ProductCreateRequest } from '../api/product-api';
 
 export function ProductPage(): React.ReactElement {
   const [products, setProducts] = useState<Product[]>([]);
@@ -63,6 +63,18 @@ export function ProductPage(): React.ReactElement {
     }
   };
 
+  const handleDelete = async (product: Product): Promise<void> => {
+    try {
+      await deleteProduct(product.id);
+      message.success('상품이 삭제되었습니다.');
+      fetchProducts();
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      const msg = err.response?.data?.message || '삭제에 실패했습니다.';
+      message.error(msg);
+    }
+  };
+
   const handleToggleActive = async (product: Product): Promise<void> => {
     try {
       await updateProduct(product.id, { isActive: !product.isActive });
@@ -89,7 +101,7 @@ export function ProductPage(): React.ReactElement {
     {
       title: '관리',
       key: 'action',
-      width: 180,
+      width: 250,
       render: (_, record) => (
         <Space>
           <Button size="small" icon={<EditOutlined />} onClick={() => openEditModal(record)}>
@@ -103,6 +115,18 @@ export function ProductPage(): React.ReactElement {
           >
             <Button size="small" danger={record.isActive}>
               {record.isActive ? '비활성화' : '활성화'}
+            </Button>
+          </Popconfirm>
+          <Popconfirm
+            title="정말 삭제하시겠습니까?"
+            description="주문 내역이 있는 상품은 삭제할 수 없습니다."
+            onConfirm={() => handleDelete(record)}
+            okText="삭제"
+            cancelText="취소"
+            okButtonProps={{ danger: true }}
+          >
+            <Button size="small" danger icon={<DeleteOutlined />}>
+              삭제
             </Button>
           </Popconfirm>
         </Space>

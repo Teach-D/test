@@ -2,6 +2,7 @@ package com.example.roulette.product
 
 import com.example.roulette.common.exception.BusinessException
 import com.example.roulette.common.exception.ErrorCode
+import com.example.roulette.order.OrderRepository
 import com.example.roulette.product.dto.ProductCreateRequest
 import com.example.roulette.product.dto.ProductResponse
 import com.example.roulette.product.dto.ProductUpdateRequest
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class ProductService(
     private val productRepository: ProductRepository,
+    private val orderRepository: OrderRepository,
 ) {
     /** 활성 상품 목록 (사용자용) */
     @Transactional(readOnly = true)
@@ -58,6 +60,21 @@ class ProductService(
         request.isActive?.let { product.isActive = it }
 
         return toResponse(product)
+    }
+
+    /** 상품 삭제 (어드민) — 주문 내역이 있으면 삭제 불가 */
+    @Transactional
+    fun delete(productId: Long) {
+        val product =
+            productRepository
+                .findById(productId)
+                .orElseThrow { BusinessException(ErrorCode.PRODUCT_NOT_FOUND) }
+
+        if (orderRepository.existsByProductId(product.id)) {
+            throw BusinessException(ErrorCode.PRODUCT_HAS_ORDERS)
+        }
+
+        productRepository.delete(product)
     }
 
     /** 상품 단건 조회 */
