@@ -21,6 +21,7 @@ export function useRouletteStatus(): ReturnType<typeof useQuery<RouletteStatusRe
   return useQuery<RouletteStatusResponse>({
     queryKey: ROULETTE_QUERY_KEYS.status,
     queryFn: getRouletteStatus,
+    staleTime: 0, // 페이지 진입 시 항상 최신 참여 상태 조회 (어드민 취소 반영)
   });
 }
 
@@ -32,6 +33,7 @@ export function useTodayBudget(): ReturnType<typeof useQuery<BudgetResponse>> {
   return useQuery<BudgetResponse>({
     queryKey: ROULETTE_QUERY_KEYS.budget,
     queryFn: getTodayBudget,
+    staleTime: 0, // 페이지 진입 시 항상 최신 예산 조회
   });
 }
 

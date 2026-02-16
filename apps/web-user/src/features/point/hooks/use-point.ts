@@ -17,6 +17,7 @@ export function usePointBalance(): ReturnType<typeof useQuery<PointBalanceRespon
   return useQuery<PointBalanceResponse>({
     queryKey: POINT_QUERY_KEYS.balance,
     queryFn: getPointBalance,
+    staleTime: 0, // 페이지 진입 시 항상 최신 잔액 조회 (어드민 취소 반영)
   });
 }
 
@@ -28,6 +29,7 @@ export function usePoints(): ReturnType<typeof useQuery<PointResponse[]>> {
   return useQuery<PointResponse[]>({
     queryKey: POINT_QUERY_KEYS.list,
     queryFn: getPoints,
+    staleTime: 0, // 페이지 진입 시 항상 최신 내역 조회
   });
 }
 
@@ -39,5 +41,6 @@ export function useExpiringSoonPoints(): ReturnType<typeof useQuery<PointRespons
   return useQuery<PointResponse[]>({
     queryKey: POINT_QUERY_KEYS.expiringSoon,
     queryFn: getExpiringSoonPoints,
+    staleTime: 0, // 페이지 진입 시 항상 최신 만료 예정 조회
   });
 }
