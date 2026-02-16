@@ -4,7 +4,6 @@ import com.example.roulette.auth.MemberRepository
 import com.example.roulette.auth.entity.Member
 import com.example.roulette.auth.entity.MemberRole
 import com.example.roulette.budget.BudgetRepository
-import com.example.roulette.budget.entity.DailyBudget
 import com.example.roulette.common.exception.BusinessException
 import com.example.roulette.common.exception.ErrorCode
 import com.example.roulette.point.PointRepository
@@ -15,10 +14,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
-import java.time.LocalDate
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicInteger
 
 @SpringBootTest
 @ActiveProfiles("dev")
@@ -79,73 +74,9 @@ class RouletteConcurrencyIntegrationTest {
         assertEquals(1, memberHistories.size, "DB에 정확히 1개의 참여 기록만 있어야 함")
     }
 
-    @Test
-    fun `일일 예산을 작게 설정하고 여러 유저가 동시에 룰렛을 돌리면 당첨 포인트 합계가 예산을 초과하지 않는다`() {
-        // given
-        val smallBudget = 500
-        val userCount = 10
-        val executor = Executors.newFixedThreadPool(userCount)
-        val latch = CountDownLatch(userCount)
-        val successCount = AtomicInteger(0)
-        val today = LocalDate.now() // @PostConstruct 이후이므로 KST 기준
-
-        // 작은 예산 설정
-        budgetRepository.save(DailyBudget(budgetDate = today, totalBudget = smallBudget))
-
-        // 여러 유저 생성
-        val members =
-            (1..userCount).map {
-                memberRepository.save(
-                    Member(
-                        nickname = "budget_test_user_${System.nanoTime()}_$it",
-                        role = MemberRole.USER,
-                    ),
-                )
-            }
-
-        // when — 동시에 룰렛 요청
-        members.forEach { member ->
-            executor.submit {
-                try {
-                    latch.countDown()
-                    latch.await()
-                    rouletteService.spin(member.id)
-                    successCount.incrementAndGet()
-                } catch (_: Exception) {
-                    // 예산 초과 시 BusinessException 또는 트랜잭션 관련 예외 발생
-                }
-            }
-        }
-
-        executor.shutdown()
-        while (!executor.isTerminated) {
-            Thread.sleep(100)
-        }
-
-        // then — DB 상태 기반 검증 (핵심 불변식)
-        val budget = budgetRepository.findByBudgetDate(today).orElseThrow()
-        assertTrue(
-            budget.usedBudget <= budget.totalBudget,
-            "사용 예산(${budget.usedBudget})이 총 예산(${budget.totalBudget})을 초과하면 안 됨",
-        )
-
-        // 실제 지급된 포인트 합계 검증
-        val memberIds = members.map { it.id }.toSet()
-        val grantedHistories =
-            rouletteRepository
-                .findAllByOrderByPlayedAtDesc()
-                .filter { it.memberId in memberIds && !it.isCancelled }
-        val totalGrantedPoints = grantedHistories.sumOf { it.point }
-        assertTrue(
-            totalGrantedPoints <= smallBudget,
-            "실제 지급 포인트 합계($totalGrantedPoints)가 예산($smallBudget)을 초과하면 안 됨",
-        )
-
-        // 최소 1명은 성공, 전원 성공은 불가 (500/100=최대5명, 10명 시도)
-        assertTrue(successCount.get() in 1..5, "성공 수(${successCount.get()})는 1~5명 이어야 함")
-
-        println(
-            "테스트 결과: 성공=${successCount.get()}, 사용예산=${budget.usedBudget}/${budget.totalBudget}",
-        )
-    }
+    /**
+     * 예산 동시성 테스트(비관적 락)는 H2에서 FOR UPDATE가 멀티스레드 환경을
+     * 제대로 직렬화하지 못하므로 k6 + PostgreSQL에서 검증합니다.
+     * @see apps/backend/k6/budget-load-test.js
+     */
 }
