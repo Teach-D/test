@@ -1,7 +1,6 @@
-import { useEffect, type ReactElement } from 'react';
+import { type ReactElement } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Router } from './router';
-import { useAuthStore } from './common/stores/auth-store';
 
 /**
  * TanStack Query 전역 클라이언트 설정
@@ -18,13 +17,7 @@ const queryClient = new QueryClient({
 });
 
 function App(): ReactElement {
-  const initialize = useAuthStore((state) => state.initialize);
-
-  useEffect(() => {
-    // 앱 시작 시 localStorage에서 인증 정보 복원
-    initialize();
-  }, [initialize]);
-
+  // 인증 상태는 auth-store.ts에서 스토어 생성 시점에 localStorage로부터 즉시 복원
   return (
     <QueryClientProvider client={queryClient}>
       <Router />

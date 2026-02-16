@@ -12,12 +12,19 @@ interface AuthState {
   initialize: () => void;
 }
 
+// 스토어 생성 시점에 localStorage에서 즉시 복원 (useEffect 대기 없이)
+const storedToken = localStorage.getItem('accessToken');
+const storedMemberId = localStorage.getItem('memberId');
+const storedNickname = localStorage.getItem('nickname');
+const storedRole = localStorage.getItem('role');
+const hasAuth = !!(storedToken && storedMemberId && storedNickname && storedRole);
+
 export const useAuthStore = create<AuthState>((set) => ({
-  accessToken: null,
-  memberId: null,
-  nickname: null,
-  role: null,
-  isAuthenticated: false,
+  accessToken: hasAuth ? storedToken : null,
+  memberId: hasAuth ? parseInt(storedMemberId!, 10) : null,
+  nickname: hasAuth ? storedNickname : null,
+  role: hasAuth ? storedRole : null,
+  isAuthenticated: hasAuth,
 
   login: (response: LoginResponse) => {
     // localStorage에 저장
