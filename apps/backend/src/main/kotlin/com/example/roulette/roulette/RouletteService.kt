@@ -33,18 +33,23 @@ class RouletteService(
             throw BusinessException(ErrorCode.ROULETTE_ALREADY_PLAYED)
         }
 
-        // 2. 랜덤 포인트 결정 (100~1000, 100 단위)
-        val point = generateRandomPoint()
-
-        // 3. 예산 확인 및 차감 (비관적 락)
+        // 2. 예산 조회 및 락 획득
         val budget = getOrCreateBudgetWithLock(today)
 
-        if (!budget.canUse(point)) {
+        // 3. 잔여 예산 확인
+        val remainingBudget = budget.remainingBudget
+        if (remainingBudget < MIN_POINT) {
             throw BusinessException(ErrorCode.BUDGET_EXCEEDED)
         }
+
+        // 4. 잔여 예산 범위 내에서 랜덤 포인트 생성 (100~min(1000, 잔여예산), 100 단위)
+        val maxPoint = minOf(MAX_POINT, (remainingBudget / POINT_UNIT) * POINT_UNIT)
+        val point = generateRandomPointInRange(MIN_POINT, maxPoint)
+
+        // 5. 예산 차감
         budget.use(point)
 
-        // 4. 룰렛 기록 저장 (UNIQUE 제약으로 동시 중복 참여 방지)
+        // 6. 룰렛 기록 저장 (UNIQUE 제약으로 동시 중복 참여 방지)
         try {
             rouletteRepository.saveAndFlush(
                 RouletteHistory(memberId = memberId, point = point, playedAt = today),
@@ -53,7 +58,7 @@ class RouletteService(
             throw BusinessException(ErrorCode.ROULETTE_ALREADY_PLAYED)
         }
 
-        // 5. 포인트 지급
+        // 7. 포인트 지급
         pointService.grant(memberId, point)
 
         return RouletteResultResponse(point = point, playedAt = today)
@@ -131,8 +136,10 @@ class RouletteService(
                     .orElseThrow { BusinessException(ErrorCode.BUDGET_NOT_FOUND) }
             }
 
-    private fun generateRandomPoint(): Int =
-        (Random.nextInt(MIN_POINT / POINT_UNIT, MAX_POINT / POINT_UNIT + 1)) * POINT_UNIT
+    private fun generateRandomPointInRange(
+        min: Int,
+        max: Int,
+    ): Int = (Random.nextInt(min / POINT_UNIT, max / POINT_UNIT + 1)) * POINT_UNIT
 
     companion object {
         const val MIN_POINT = 100

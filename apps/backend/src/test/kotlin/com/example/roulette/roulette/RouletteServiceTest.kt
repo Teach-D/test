@@ -78,11 +78,11 @@ class RouletteServiceTest {
     }
 
     @Test
-    fun `일일 예산이 소진되면 BusinessException을 던진다`() {
+    fun `잔여 예산이 100p 미만이면 BusinessException을 던진다`() {
         // given
         val memberId = 1L
         val today = LocalDate.now()
-        val budget = DailyBudget(budgetDate = today, totalBudget = 100, usedBudget = 100, id = 1L)
+        val budget = DailyBudget(budgetDate = today, totalBudget = 100_000, usedBudget = 99_950, id = 1L)
 
         every { rouletteRepository.existsByMemberIdAndPlayedAtAndIsCancelledFalse(memberId, today) } returns false
         every { budgetRepository.findByBudgetDateWithLock(today) } returns Optional.of(budget)
@@ -93,6 +93,34 @@ class RouletteServiceTest {
                 rouletteService.spin(memberId)
             }
         assertEquals(ErrorCode.BUDGET_EXCEEDED, exception.errorCode)
+    }
+
+    @Test
+    fun `잔여 예산이 300p이면 100~300 범위의 포인트를 획득한다`() {
+        // given
+        val memberId = 1L
+        val today = LocalDate.now()
+        val budget = DailyBudget(budgetDate = today, totalBudget = 100_000, usedBudget = 99_700, id = 1L)
+
+        every { rouletteRepository.existsByMemberIdAndPlayedAtAndIsCancelledFalse(memberId, today) } returns false
+        every { budgetRepository.findByBudgetDateWithLock(today) } returns Optional.of(budget)
+        every { rouletteRepository.saveAndFlush(any()) } answers { firstArg() }
+        every { pointService.grant(any(), any()) } returns
+            Point(
+                memberId = memberId,
+                amount = 100,
+                remainingAmount = 100,
+                expiresAt = LocalDateTime.now().plusDays(30),
+                id = 1L,
+            )
+
+        // when
+        val result = rouletteService.spin(memberId)
+
+        // then
+        assertTrue(result.point in 100..300)
+        assertEquals(0, result.point % 100)
+        assertEquals(today, result.playedAt)
     }
 
     @Test
