@@ -5,6 +5,7 @@ plugins {
     kotlin("plugin.spring") version "2.1.0"
     kotlin("plugin.jpa") version "2.1.0"
     id("org.jlleitschuh.gradle.ktlint") version "12.1.2"
+    jacoco
 }
 
 ktlint {
@@ -74,4 +75,33 @@ allOpen {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport) // 테스트 후 자동으로 커버리지 리포트 생성
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        html.required.set(true) // HTML 리포트 (브라우저에서 확인)
+        xml.required.set(true) // XML 리포트 (CI 연동용)
+        csv.required.set(false)
+    }
+
+    // 커버리지 측정 제외 대상 (설정, DTO, 엔티티 등)
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    "**/config/**",
+                    "**/dto/**",
+                    "**/entity/**",
+                    "**/exception/**",
+                    "**/*Application*",
+                )
+            }
+        }),
+    )
 }
