@@ -44,7 +44,10 @@ class RouletteConcurrencyIntegrationTest {
     @BeforeEach
     fun setUp() {
         // 테스트용 회원 생성
-        testMember = memberRepository.save(Member(nickname = "concurrency_test_user_${System.nanoTime()}", role = MemberRole.USER))
+        testMember =
+            memberRepository.save(
+                Member(nickname = "concurrency_test_user_${System.nanoTime()}", role = MemberRole.USER),
+            )
     }
 
     @AfterEach
@@ -97,7 +100,10 @@ class RouletteConcurrencyIntegrationTest {
 
         // DB 검증
         val histories = rouletteRepository.findAllByOrderByPlayedAtDesc()
-        val todayHistories = histories.filter { it.memberId == testMember.id && it.playedAt == today && !it.isCancelled }
+        val todayHistories =
+            histories.filter {
+                it.memberId == testMember.id && it.playedAt == today && !it.isCancelled
+            }
         assertEquals(1, todayHistories.size, "DB에 정확히 1개의 참여 기록만 있어야 함")
     }
 
@@ -115,9 +121,12 @@ class RouletteConcurrencyIntegrationTest {
         budgetRepository.save(DailyBudget(budgetDate = today, totalBudget = smallBudget))
 
         // 여러 유저 생성
-        val members = (1..userCount).map {
-            memberRepository.save(Member(nickname = "budget_test_user_${System.nanoTime()}_$it", role = MemberRole.USER))
-        }
+        val members =
+            (1..userCount).map {
+                memberRepository.save(
+                    Member(nickname = "budget_test_user_${System.nanoTime()}_$it", role = MemberRole.USER),
+                )
+            }
 
         // when — 동시에 룰렛 요청
         members.forEach { member ->
@@ -153,12 +162,16 @@ class RouletteConcurrencyIntegrationTest {
         assertEquals(smallBudget, budget.totalBudget, "총 예산은 변경되지 않아야 함")
 
         // 실제 지급된 포인트 합계 검증
-        val todayHistories = rouletteRepository.findAllByOrderByPlayedAtDesc()
-            .filter { it.playedAt == today && !it.isCancelled }
+        val todayHistories =
+            rouletteRepository
+                .findAllByOrderByPlayedAtDesc()
+                .filter { it.playedAt == today && !it.isCancelled }
         val totalGrantedPoints = todayHistories.sumOf { it.point }
         assertEquals(budget.usedBudget, totalGrantedPoints, "사용 예산과 실제 지급 포인트 합계가 일치해야 함")
         assertTrue(totalGrantedPoints <= smallBudget, "실제 지급 포인트 합계가 예산을 초과하면 안 됨")
 
-        println("테스트 결과: 성공=${successCount.get()}, 예산초과=${budgetExceededCount.get()}, 사용예산=${budget.usedBudget}/${budget.totalBudget}")
+        println(
+            "테스트 결과: 성공=${successCount.get()}, 예산초과=${budgetExceededCount.get()}, 사용예산=${budget.usedBudget}/${budget.totalBudget}",
+        )
     }
 }
