@@ -5,9 +5,10 @@ import type { PointResponse } from '@/common/types/api';
 import { LoadingSpinner } from '@/common/components/loading-spinner';
 import { ErrorMessage } from '@/common/components/error-message';
 
-type PointStatus = 'available' | 'expiring-soon' | 'used' | 'expired';
+type PointStatus = 'available' | 'expiring-soon' | 'used' | 'expired' | 'revoked';
 
 function getPointStatus(point: PointResponse): PointStatus {
+  if (point.isRevoked) return 'revoked';
   if (point.isExpired) return 'expired';
   if (point.remainingAmount === 0) return 'used';
 
@@ -22,6 +23,7 @@ function getPointStatus(point: PointResponse): PointStatus {
 
 function getStatusBadge(status: PointStatus): ReactElement {
   const badgeClasses: Record<PointStatus, string> = {
+    revoked: 'bg-red-100 text-red-700',
     expired: 'bg-red-100 text-red-700',
     'expiring-soon': 'bg-orange-100 text-orange-700',
     used: 'bg-gray-100 text-gray-700',
@@ -29,6 +31,7 @@ function getStatusBadge(status: PointStatus): ReactElement {
   };
 
   const labels: Record<PointStatus, string> = {
+    revoked: '취소됨',
     expired: '만료됨',
     'expiring-soon': '만료 임박',
     used: '사용 완료',
@@ -138,7 +141,7 @@ export function PointPage(): ReactElement {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg font-bold text-indigo-600">
+                      <span className={`text-lg font-bold ${status === 'revoked' ? 'text-gray-400 line-through' : 'text-indigo-600'}`}>
                         +{point.amount.toLocaleString()}P
                       </span>
                       {getStatusBadge(status)}

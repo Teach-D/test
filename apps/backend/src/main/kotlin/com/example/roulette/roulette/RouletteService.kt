@@ -49,7 +49,11 @@ class RouletteService(
         // 5. 예산 차감
         budget.use(point)
 
-        // 6. 룰렛 기록 저장 (UNIQUE 제약으로 동시 중복 참여 방지)
+        // 6. 취소된 기존 기록 삭제 (UNIQUE 제약 충돌 방지)
+        rouletteRepository.deleteByMemberIdAndPlayedAtAndIsCancelledTrue(memberId, today)
+        rouletteRepository.flush()
+
+        // 7. 룰렛 기록 저장 (UNIQUE 제약으로 동시 중복 참여 방지)
         try {
             rouletteRepository.saveAndFlush(
                 RouletteHistory(memberId = memberId, point = point, playedAt = today),
@@ -58,7 +62,7 @@ class RouletteService(
             throw BusinessException(ErrorCode.ROULETTE_ALREADY_PLAYED)
         }
 
-        // 7. 포인트 지급
+        // 8. 포인트 지급
         pointService.grant(memberId, point)
 
         return RouletteResultResponse(point = point, playedAt = today)

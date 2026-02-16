@@ -23,4 +23,10 @@ interface RouletteRepository : JpaRepository<RouletteHistory, Long> {
 
     /** 오늘 참여자 수 (취소되지 않은 것만) */
     fun countByPlayedAtAndIsCancelledFalse(playedAt: LocalDate): Int
+
+    /** 취소된 참여 기록 삭제 (재참여 허용을 위해) */
+    fun deleteByMemberIdAndPlayedAtAndIsCancelledTrue(
+        memberId: Long,
+        playedAt: LocalDate,
+    )
 }

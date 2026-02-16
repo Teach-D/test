@@ -46,6 +46,7 @@ export interface PointResponse {
   earnedAt: string;
   expiresAt: string;
   isExpired: boolean;
+  isRevoked: boolean;
 }
 
 export interface ProductResponse {

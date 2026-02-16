@@ -9,6 +9,7 @@ data class PointResponse(
     val earnedAt: LocalDateTime,
     val expiresAt: LocalDateTime,
     val isExpired: Boolean,
+    val isRevoked: Boolean,
 )
 
 data class PointBalanceResponse(

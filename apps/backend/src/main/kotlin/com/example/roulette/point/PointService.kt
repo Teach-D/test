@@ -79,6 +79,7 @@ class PointService(
                 .findById(pointId)
                 .orElseThrow { BusinessException(ErrorCode.POINT_NOT_FOUND) }
         point.remainingAmount = 0
+        point.isRevoked = true
     }
 
     /** 회원의 특정 금액/시간 이후 생성된 포인트 조회 (룰렛 취소 시 사용) */
@@ -135,5 +136,6 @@ class PointService(
             earnedAt = point.earnedAt,
             expiresAt = point.expiresAt,
             isExpired = point.isExpired,
+            isRevoked = point.isRevoked,
         )
 }

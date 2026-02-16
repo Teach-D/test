@@ -17,6 +17,8 @@ class Point(
     val earnedAt: LocalDateTime = LocalDateTime.now(),
     @Column(nullable = false)
     val expiresAt: LocalDateTime,
+    @Column(nullable = false)
+    var isRevoked: Boolean = false,
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
