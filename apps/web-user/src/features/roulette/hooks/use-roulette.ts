@@ -36,7 +36,7 @@ export function useTodayBudget(): ReturnType<typeof useQuery<BudgetResponse>> {
 
 /**
  * 룰렛 돌리기 뮤테이션 훅
- * 성공 시 룰렛 상태와 예산 캐시를 무효화하여 최신 데이터를 가져온다.
+ * 성공 또는 특정 에러 발생 시 룰렛 상태와 예산 캐시를 무효화하여 최신 데이터를 가져온다.
  */
 export function useSpinRoulette(): ReturnType<
   typeof useMutation<RouletteResultResponse, Error, void>
@@ -46,7 +46,12 @@ export function useSpinRoulette(): ReturnType<
   return useMutation<RouletteResultResponse, Error, void>({
     mutationFn: spinRoulette,
     onSuccess: () => {
-      // 룰렛 상태와 예산 캐시를 무효화하여 재조회
+      // 성공 시 룰렛 상태와 예산 캐시를 무효화하여 재조회
+      void queryClient.invalidateQueries({ queryKey: ROULETTE_QUERY_KEYS.status });
+      void queryClient.invalidateQueries({ queryKey: ROULETTE_QUERY_KEYS.budget });
+    },
+    onError: () => {
+      // 에러 발생 시에도 최신 상태를 가져와서 UI에 반영 (이미 참여한 경우 등)
       void queryClient.invalidateQueries({ queryKey: ROULETTE_QUERY_KEYS.status });
       void queryClient.invalidateQueries({ queryKey: ROULETTE_QUERY_KEYS.budget });
     },

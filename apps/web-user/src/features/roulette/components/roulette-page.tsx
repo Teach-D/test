@@ -5,12 +5,31 @@ import { useRouletteStatus, useTodayBudget, useSpinRoulette } from '../hooks/use
 import type { RouletteResultResponse } from '@/common/types/api';
 import { LoadingSpinner } from '@/common/components/loading-spinner';
 import { ErrorMessage } from '@/common/components/error-message';
+import { ApiError } from '@/common/api/client';
 
 type SpinState = 'idle' | 'spinning' | 'result';
+
+/**
+ * 에러 코드별 사용자 친화적 메시지 매핑
+ */
+function getErrorMessage(error: Error): string {
+  if (error instanceof ApiError) {
+    switch (error.errorCode) {
+      case 'ROULETTE_ALREADY_PLAYED':
+        return '오늘은 이미 참여했어요! 내일 다시 도전해주세요 🎯';
+      case 'BUDGET_EXCEEDED':
+        return '오늘 예산이 모두 소진되었어요. 내일 다시 도전해주세요!';
+      default:
+        return error.message;
+    }
+  }
+  return '알 수 없는 오류가 발생했어요. 다시 시도해주세요.';
+}
 
 export function RoulettePage(): ReactElement {
   const [spinState, setSpinState] = useState<SpinState>('idle');
   const [result, setResult] = useState<RouletteResultResponse | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // 룰렛 상태와 예산 조회 — TanStack Query가 캐싱과 로딩 상태를 관리
   const statusQuery = useRouletteStatus();
@@ -22,12 +41,14 @@ export function RoulettePage(): ReactElement {
     if (!statusQuery.data?.canPlay || spinState !== 'idle') return;
 
     setSpinState('spinning');
+    setErrorMessage(null);
     spinMutation.mutate(undefined, {
       onSuccess: (data) => {
         setResult(data);
       },
-      onError: () => {
+      onError: (error) => {
         setSpinState('idle');
+        setErrorMessage(getErrorMessage(error));
       },
     });
   };
@@ -137,10 +158,10 @@ export function RoulettePage(): ReactElement {
             </p>
           )}
 
-          {/* 뮤테이션 에러 메시지 */}
-          {spinMutation.isError && (
-            <div className="mt-4 rounded-lg bg-red-50 p-3 text-center text-sm text-red-800">
-              룰렛을 돌리는 중 오류가 발생했습니다.
+          {/* 에러 메시지 — 친화적인 메시지 표시 */}
+          {errorMessage && (
+            <div className="mt-4 rounded-lg bg-red-50 p-4 text-center">
+              <p className="text-sm font-medium text-red-800">{errorMessage}</p>
             </div>
           )}
         </div>

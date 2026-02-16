@@ -3,6 +3,20 @@ import type { ApiResponse } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
+/**
+ * API 에러 클래스
+ * errorCode를 포함하여 에러 타입별로 다른 메시지를 표시할 수 있다.
+ */
+export class ApiError extends Error {
+  errorCode?: string;
+
+  constructor(message: string, errorCode?: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.errorCode = errorCode;
+  }
+}
+
 const client = axios.create({
   baseURL: API_BASE_URL,
   timeout: 60000,
@@ -32,8 +46,13 @@ client.interceptors.response.use(
     if (apiResponse.status === 'SUCCESS') {
       return { ...response, data: apiResponse.data };
     }
-    // ERROR 상태인 경우 에러 메시지로 reject
-    return Promise.reject(new Error(apiResponse.message ?? '요청 처리에 실패했습니다.'));
+    // ERROR 상태인 경우 에러 코드와 메시지를 포함한 ApiError로 reject
+    return Promise.reject(
+      new ApiError(
+        apiResponse.message ?? '요청 처리에 실패했습니다.',
+        apiResponse.errorCode ?? undefined,
+      ),
+    );
   },
   (error: AxiosError<ApiResponse<unknown>>) => {
     if (error.response?.status === 401) {
@@ -42,11 +61,17 @@ client.interceptors.response.use(
       localStorage.removeItem('nickname');
       localStorage.removeItem('role');
       window.location.href = '/login';
-      return Promise.reject(new Error('인증이 필요합니다.'));
+      return Promise.reject(new ApiError('인증이 필요합니다.', 'UNAUTHORIZED'));
     }
-    // 백엔드 에러 메시지 추출
+    // 백엔드 에러 메시지와 에러 코드 추출
     const apiMessage = error.response?.data?.message;
-    return Promise.reject(new Error(apiMessage ?? error.message ?? '네트워크 오류가 발생했습니다.'));
+    const apiErrorCode = error.response?.data?.errorCode;
+    return Promise.reject(
+      new ApiError(
+        apiMessage ?? error.message ?? '네트워크 오류가 발생했습니다.',
+        apiErrorCode ?? undefined,
+      ),
+    );
   },
 );
 
