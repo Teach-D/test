@@ -14,6 +14,7 @@ import io.mockk.verify
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 import java.util.*
 
 class OrderServiceTest {
@@ -119,5 +120,77 @@ class OrderServiceTest {
                 orderService.cancelOrder(1L)
             }
         assertEquals(ErrorCode.ORDER_ALREADY_CANCELLED, exception.errorCode)
+    }
+
+    @Test
+    fun `존재하지 않는 주문을 취소하면 ORDER_NOT_FOUND 예외를 던진다`() {
+        // given
+        every { orderRepository.findById(999L) } returns Optional.empty()
+
+        // when & then
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                orderService.cancelOrder(999L)
+            }
+        assertEquals(ErrorCode.ORDER_NOT_FOUND, exception.errorCode)
+    }
+
+    @Test
+    fun `내 주문 내역을 조회할 수 있다`() {
+        // given
+        val memberId = 1L
+        val now = LocalDateTime.now()
+        val orders =
+            listOf(
+                Order(memberId = memberId, productId = 1L, usedPoint = 3000, orderedAt = now, id = 1L),
+                Order(memberId = memberId, productId = 2L, usedPoint = 1500, orderedAt = now.minusDays(1), id = 2L),
+            )
+        val product1 = Product(name = "커피", price = 3000, stock = 8, id = 1L)
+        val product2 = Product(name = "아이스크림", price = 1500, stock = 5, id = 2L)
+
+        every { orderRepository.findByMemberIdOrderByOrderedAtDesc(memberId) } returns orders
+        every { productService.getProduct(1L) } returns product1
+        every { productService.getProduct(2L) } returns product2
+
+        // when
+        val result = orderService.getMyOrders(memberId)
+
+        // then
+        assertEquals(2, result.size)
+        assertEquals(1L, result[0].id)
+        assertEquals("커피", result[0].productName)
+        assertEquals(3000, result[0].usedPoint)
+        assertEquals("COMPLETED", result[0].status)
+        assertEquals(2L, result[1].id)
+        assertEquals("아이스크림", result[1].productName)
+        assertEquals(1500, result[1].usedPoint)
+    }
+
+    @Test
+    fun `전체 주문 내역을 조회할 수 있다`() {
+        // given
+        val now = LocalDateTime.now()
+        val orders =
+            listOf(
+                Order(memberId = 1L, productId = 1L, usedPoint = 3000, orderedAt = now, id = 1L),
+                Order(memberId = 2L, productId = 1L, usedPoint = 3000, orderedAt = now.minusDays(1), id = 2L),
+            )
+        val product = Product(name = "커피", price = 3000, stock = 8, id = 1L)
+
+        every { orderRepository.findAllByOrderByOrderedAtDesc() } returns orders
+        every { productService.getProduct(1L) } returns product
+
+        // when
+        val result = orderService.getAllOrders()
+
+        // then
+        assertEquals(2, result.size)
+        assertEquals(1L, result[0].id)
+        assertEquals("커피", result[0].productName)
+        assertEquals(3000, result[0].usedPoint)
+        assertEquals("COMPLETED", result[0].status)
+        assertEquals(2L, result[1].id)
+        assertEquals("커피", result[1].productName)
+        assertEquals(3000, result[1].usedPoint)
     }
 }

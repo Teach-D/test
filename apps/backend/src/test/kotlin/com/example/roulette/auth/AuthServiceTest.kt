@@ -56,4 +56,25 @@ class AuthServiceTest {
         assertEquals(2L, result.memberId)
         verify { memberRepository.save(any()) }
     }
+
+    @Test
+    fun `admin 닉네임으로 로그인하면 ADMIN 역할이 부여된다`() {
+        // given
+        val adminMember = Member(nickname = "admin", role = MemberRole.ADMIN, id = 3L)
+        every { memberRepository.findByNickname("admin") } returns Optional.empty()
+        every { memberRepository.save(any()) } returns adminMember
+        every { jwtProvider.createToken(3L, "ADMIN") } returns "admin-token"
+
+        // when
+        val result = authService.login(LoginRequest(nickname = "admin"))
+
+        // then
+        assertEquals("admin-token", result.accessToken)
+        assertEquals("ADMIN", result.role)
+        verify {
+            memberRepository.save(
+                match { it.nickname == "admin" && it.role == MemberRole.ADMIN },
+            )
+        }
+    }
 }

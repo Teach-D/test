@@ -152,4 +152,86 @@ class PointServiceTest {
         // then
         assertEquals(500, point.remainingAmount) // 400 + 300 = 700이지만, 원래 금액 500으로 제한
     }
+
+    @Test
+    fun `포인트를 회수하면 잔액이 0이 되고 isRevoked가 true가 된다`() {
+        // given
+        val point =
+            Point(
+                memberId = 1L,
+                amount = 500,
+                remainingAmount = 500,
+                expiresAt = LocalDateTime.now().plusDays(30),
+                id = 1L,
+            )
+        every { pointRepository.findById(1L) } returns Optional.of(point)
+
+        // when
+        pointService.revoke(1L)
+
+        // then
+        assertEquals(0, point.remainingAmount)
+        assertTrue(point.isRevoked)
+    }
+
+    @Test
+    fun `존재하지 않는 포인트를 회수하면 POINT_NOT_FOUND 예외를 던진다`() {
+        // given
+        every { pointRepository.findById(999L) } returns Optional.empty()
+
+        // when & then
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                pointService.revoke(999L)
+            }
+        assertEquals(ErrorCode.POINT_NOT_FOUND, exception.errorCode)
+    }
+
+    @Test
+    fun `포인트 내역을 최신순으로 조회할 수 있다`() {
+        // given
+        val memberId = 1L
+        val now = LocalDateTime.now()
+        val points =
+            listOf(
+                Point(memberId = memberId, amount = 300, remainingAmount = 300, expiresAt = now.plusDays(30), id = 1L),
+                Point(memberId = memberId, amount = 500, remainingAmount = 200, expiresAt = now.plusDays(20), id = 2L),
+            )
+        every { pointRepository.findByMemberIdOrderByEarnedAtDesc(memberId) } returns points
+
+        // when
+        val result = pointService.getPoints(memberId)
+
+        // then
+        assertEquals(2, result.size)
+        assertEquals(1L, result[0].id)
+        assertEquals(300, result[0].amount)
+        assertEquals(300, result[0].remainingAmount)
+        assertFalse(result[0].isRevoked)
+        assertEquals(2L, result[1].id)
+        assertEquals(500, result[1].amount)
+        assertEquals(200, result[1].remainingAmount)
+    }
+
+    @Test
+    fun `만료 예정 포인트를 조회할 수 있다`() {
+        // given
+        val memberId = 1L
+        val now = LocalDateTime.now()
+        val expiringSoonPoints =
+            listOf(
+                Point(memberId = memberId, amount = 200, remainingAmount = 150, expiresAt = now.plusDays(3), id = 3L),
+            )
+        every { pointRepository.findExpiringSoon(memberId, any(), any()) } returns expiringSoonPoints
+
+        // when
+        val result = pointService.getExpiringSoon(memberId)
+
+        // then
+        assertEquals(1, result.size)
+        assertEquals(3L, result[0].id)
+        assertEquals(200, result[0].amount)
+        assertEquals(150, result[0].remainingAmount)
+        assertFalse(result[0].isRevoked)
+    }
 }

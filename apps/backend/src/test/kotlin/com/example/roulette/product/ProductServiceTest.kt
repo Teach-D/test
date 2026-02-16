@@ -131,4 +131,40 @@ class ProductServiceTest {
             }
         assertEquals(ErrorCode.PRODUCT_NOT_FOUND, exception.errorCode)
     }
+
+    @Test
+    fun `전체 상품 목록을 조회할 수 있다`() {
+        // given
+        val products =
+            listOf(
+                Product(name = "커피", description = "아메리카노", price = 3000, stock = 10, isActive = true, id = 1L),
+                Product(name = "아이스크림", description = "바닐라", price = 1500, stock = 5, isActive = false, id = 2L),
+            )
+        every { productRepository.findAllByOrderByCreatedAtDesc() } returns products
+
+        // when
+        val result = productService.getAllProducts()
+
+        // then
+        assertEquals(2, result.size)
+        assertEquals(1L, result[0].id)
+        assertEquals("커피", result[0].name)
+        assertTrue(result[0].isActive)
+        assertEquals(2L, result[1].id)
+        assertEquals("아이스크림", result[1].name)
+        assertFalse(result[1].isActive) // 비활성 상품도 어드민에게는 노출
+    }
+
+    @Test
+    fun `상품 단건 조회 시 존재하지 않으면 PRODUCT_NOT_FOUND 예외를 던진다`() {
+        // given
+        every { productRepository.findById(999L) } returns Optional.empty()
+
+        // when & then
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                productService.getProduct(999L)
+            }
+        assertEquals(ErrorCode.PRODUCT_NOT_FOUND, exception.errorCode)
+    }
 }

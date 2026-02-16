@@ -152,4 +152,80 @@ class RouletteServiceTest {
         assertEquals(0, budget.usedBudget)
         verify { pointService.revoke(10L) }
     }
+
+    @Test
+    fun `존재하지 않는 룰렛 내역을 취소하면 ROULETTE_NOT_FOUND 예외를 던진다`() {
+        // given
+        val historyId = 999L
+        every { rouletteRepository.findById(historyId) } returns Optional.empty()
+
+        // when & then
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                rouletteService.cancel(historyId)
+            }
+        assertEquals(ErrorCode.ROULETTE_NOT_FOUND, exception.errorCode)
+    }
+
+    @Test
+    fun `이미 취소된 룰렛을 다시 취소하면 ROULETTE_ALREADY_CANCELLED 예외를 던진다`() {
+        // given
+        val historyId = 1L
+        val today = LocalDate.now()
+        val history = RouletteHistory(memberId = 1L, point = 500, playedAt = today, id = historyId)
+        history.cancel() // 이미 취소 처리
+
+        every { rouletteRepository.findById(historyId) } returns Optional.of(history)
+
+        // when & then
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                rouletteService.cancel(historyId)
+            }
+        assertEquals(ErrorCode.ROULETTE_ALREADY_CANCELLED, exception.errorCode)
+    }
+
+    @Test
+    fun `오늘 참여 상태를 조회할 수 있다`() {
+        // given
+        val memberId = 1L
+        val today = LocalDate.now()
+        val budget = DailyBudget(budgetDate = today, totalBudget = 100_000, usedBudget = 0, id = 1L)
+
+        every { rouletteRepository.existsByMemberIdAndPlayedAtAndIsCancelledFalse(memberId, today) } returns false
+        every { budgetService.getOrCreateBudget(today) } returns budget
+
+        // when
+        val result = rouletteService.getStatus(memberId)
+
+        // then
+        assertFalse(result.hasPlayedToday)
+        assertEquals(100_000, result.remainingBudget)
+        assertTrue(result.canPlay)
+    }
+
+    @Test
+    fun `전체 참여 내역을 조회할 수 있다`() {
+        // given
+        val today = LocalDate.now()
+        val histories =
+            listOf(
+                RouletteHistory(memberId = 1L, point = 300, playedAt = today, id = 1L),
+                RouletteHistory(memberId = 2L, point = 500, playedAt = today.minusDays(1), id = 2L),
+            )
+        every { rouletteRepository.findAllByOrderByPlayedAtDesc() } returns histories
+
+        // when
+        val result = rouletteService.getAllHistories()
+
+        // then
+        assertEquals(2, result.size)
+        assertEquals(1L, result[0].id)
+        assertEquals(1L, result[0].memberId)
+        assertEquals(300, result[0].point)
+        assertFalse(result[0].isCancelled)
+        assertEquals(today, result[0].playedAt)
+        assertEquals(2L, result[1].id)
+        assertEquals(500, result[1].point)
+    }
 }
