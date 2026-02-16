@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getRouletteStatus, getTodayBudget, spinRoulette } from '../api/roulette-api';
+import { POINT_QUERY_KEYS } from '@/features/point/hooks/use-point';
 import type {
   RouletteStatusResponse,
   RouletteResultResponse,
@@ -46,9 +47,12 @@ export function useSpinRoulette(): ReturnType<
   return useMutation<RouletteResultResponse, Error, void>({
     mutationFn: spinRoulette,
     onSuccess: () => {
-      // 성공 시 룰렛 상태와 예산 캐시를 무효화하여 재조회
+      // 성공 시 룰렛 상태, 예산, 포인트 캐시를 무효화하여 재조회
       void queryClient.invalidateQueries({ queryKey: ROULETTE_QUERY_KEYS.status });
       void queryClient.invalidateQueries({ queryKey: ROULETTE_QUERY_KEYS.budget });
+      void queryClient.invalidateQueries({ queryKey: POINT_QUERY_KEYS.balance });
+      void queryClient.invalidateQueries({ queryKey: POINT_QUERY_KEYS.list });
+      void queryClient.invalidateQueries({ queryKey: POINT_QUERY_KEYS.expiringSoon });
     },
     onError: () => {
       // 에러 발생 시에도 최신 상태를 가져와서 UI에 반영 (이미 참여한 경우 등)
