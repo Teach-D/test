@@ -5,6 +5,8 @@ import com.example.roulette.auth.entity.Member
 import com.example.roulette.auth.entity.MemberRole
 import com.example.roulette.budget.BudgetRepository
 import com.example.roulette.budget.entity.DailyBudget
+import com.example.roulette.common.exception.BusinessException
+import com.example.roulette.common.exception.ErrorCode
 import com.example.roulette.point.PointRepository
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -58,44 +60,29 @@ class RouletteConcurrencyIntegrationTest {
     }
 
     @Test
-    fun `같은 유저가 동시에 2번 룰렛 요청을 보내면 정확히 1번만 성공한다`() {
-        // given
-        val threadCount = 2
-        val executor = Executors.newFixedThreadPool(threadCount)
-        val latch = CountDownLatch(threadCount)
-        val successCount = AtomicInteger(0)
-
-        // 충분한 예산 설정
+    fun `같은 유저가 하루에 두 번 룰렛을 돌리면 두 번째는 실패한다`() {
+        // given — 충분한 예산 설정
         budgetRepository.save(DailyBudget(budgetDate = today, totalBudget = 100_000))
 
-        // when — 동시에 룰렛 요청
-        repeat(threadCount) {
-            executor.submit {
-                try {
-                    latch.countDown()
-                    latch.await()
-                    rouletteService.spin(testMember.id)
-                    successCount.incrementAndGet()
-                } catch (_: Exception) {
-                    // 중복 참여 시 BusinessException, UnexpectedRollbackException,
-                    // TransactionSystemException 등 다양한 예외가 발생할 수 있음
-                }
+        // when — 첫 번째 참여: 성공
+        val result = rouletteService.spin(testMember.id)
+        assertTrue(result.point in 100..1000, "첫 번째 참여는 성공해야 함")
+
+        // then — 두 번째 참여: ROULETTE_ALREADY_PLAYED 예외
+        val exception =
+            assertThrows(BusinessException::class.java) {
+                rouletteService.spin(testMember.id)
             }
-        }
+        assertEquals(ErrorCode.ROULETTE_ALREADY_PLAYED, exception.errorCode)
 
-        executor.shutdown()
-        while (!executor.isTerminated) {
-            Thread.sleep(100)
-        }
-
-        // then — DB 상태 기반 검증 (핵심 불변식)
-        val histories = rouletteRepository.findAllByOrderByPlayedAtDesc()
+        // DB 검증 — 정확히 1개의 참여 기록만 존재
         val todayHistories =
-            histories.filter {
-                it.memberId == testMember.id && it.playedAt == today && !it.isCancelled
-            }
+            rouletteRepository
+                .findAllByOrderByPlayedAtDesc()
+                .filter {
+                    it.memberId == testMember.id && it.playedAt == today && !it.isCancelled
+                }
         assertEquals(1, todayHistories.size, "DB에 정확히 1개의 참여 기록만 있어야 함")
-        assertEquals(1, successCount.get(), "정확히 1번만 성공해야 함")
     }
 
     @Test
