@@ -11,6 +11,7 @@ enum class ErrorCode(
 
     // 회원
     MEMBER_NOT_FOUND(404, "회원을 찾을 수 없습니다."),
+    CANNOT_DEMOTE_SELF(400, "자기 자신의 관리자 권한은 제거할 수 없습니다."),
 
     // 룰렛
     ROULETTE_ALREADY_PLAYED(400, "오늘 이미 룰렛을 돌렸습니다."),

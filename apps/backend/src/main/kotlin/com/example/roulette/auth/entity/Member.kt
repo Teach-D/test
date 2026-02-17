@@ -10,11 +10,16 @@ class Member(
     val nickname: String,
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    val role: MemberRole = MemberRole.USER,
+    var role: MemberRole = MemberRole.USER,
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
-) : BaseTimeEntity()
+) : BaseTimeEntity() {
+    /** 회원 역할을 변경한다 */
+    fun changeRole(newRole: MemberRole) {
+        role = newRole
+    }
+}
 
 enum class MemberRole {
     USER,
