@@ -38,6 +38,32 @@ class AuthService(
     }
 
     /**
+     * 관리자 웹 전용 로그인.
+     * 존재하지 않는 닉네임이면 ADMIN 역할로 자동 생성한다.
+     * 기존 USER 회원이면 ADMIN으로 승격한다.
+     */
+    @Transactional
+    fun adminLogin(request: LoginRequest): LoginResponse {
+        val member =
+            memberRepository
+                .findByNickname(request.nickname)
+                .orElseGet { memberRepository.save(Member(nickname = request.nickname, role = MemberRole.ADMIN)) }
+
+        if (member.role != MemberRole.ADMIN) {
+            member.changeRole(MemberRole.ADMIN)
+        }
+
+        val token = jwtProvider.createToken(member.id, member.role.name)
+
+        return LoginResponse(
+            accessToken = token,
+            memberId = member.id,
+            nickname = member.nickname,
+            role = member.role.name,
+        )
+    }
+
+    /**
      * 닉네임으로 ADMIN 계정을 생성하거나 기존 회원을 ADMIN으로 승격한다.
      * 이미 ADMIN인 경우에도 정상 반환한다.
      */

@@ -13,6 +13,6 @@ interface LoginResponse {
 }
 
 export async function login(data: LoginRequest): Promise<LoginResponse> {
-  const response = await client.post<ApiResponse<LoginResponse>>('/api/auth/login', data);
+  const response = await client.post<ApiResponse<LoginResponse>>('/api/auth/admin-login', data);
   return response.data.data!;
 }

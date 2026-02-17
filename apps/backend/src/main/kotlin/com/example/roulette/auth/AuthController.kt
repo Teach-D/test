@@ -31,6 +31,15 @@ class AuthController(
         return ResponseEntity.ok(ApiResponse.success(response))
     }
 
+    @Operation(summary = "관리자 로그인", description = "관리자 웹 전용 로그인입니다. 없는 닉네임이면 ADMIN으로 자동 회원가입됩니다.")
+    @PostMapping("/admin-login")
+    fun adminLogin(
+        @Valid @RequestBody request: LoginRequest,
+    ): ResponseEntity<ApiResponse<LoginResponse>> {
+        val response = authService.adminLogin(request)
+        return ResponseEntity.ok(ApiResponse.success(response))
+    }
+
     @Operation(summary = "인증 디버그", description = "JWT 토큰 검증 상태를 확인합니다.")
     @GetMapping("/debug")
     fun debug(request: HttpServletRequest): ResponseEntity<ApiResponse<Map<String, Any?>>> {

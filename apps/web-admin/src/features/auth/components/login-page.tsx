@@ -16,10 +16,6 @@ export function LoginPage(): React.ReactElement {
     setLoading(true);
     try {
       const result = await login({ nickname: values.nickname });
-      if (result.role !== 'ADMIN') {
-        message.error('관리자 권한이 없습니다.');
-        return;
-      }
       authLogin(result.accessToken, result.memberId, result.nickname, result.role);
       message.success(`${result.nickname}님 환영합니다.`);
       navigate('/');
