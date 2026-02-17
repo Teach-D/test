@@ -2675,6 +2675,74 @@ QA 범위 (각 앱 에이전트와 역할 분리):
 
 ---
 
+### 37. 관리자 계정 관리 시스템 구현
+
+**사용자:**
+> 관리자로 로그인할려면 무조건 admin 닉네임이여야 하는데 그게 아니라 유저처럼 관리자 계정을 생성하도록 바꿔줘
+
+**Claude:**
+> 관리자 계정 관리 시스템을 전면 개편했습니다:
+>
+> **백엔드:**
+> - `AuthService.login()`: `"admin"` 닉네임 하드코딩 제거, 신규 회원은 항상 USER 역할
+> - `AdminMemberController` 신규: `POST/GET/DELETE /api/admin/members` 관리자 CRUD API
+> - `AuthService`: `createAdmin()`, `getAdminMembers()`, `demoteAdmin()` 메서드 추가
+> - `Member` 엔티티: `val role` → `var role`, `changeRole()` 메서드 추가
+> - 테스트 10개 추가 (login 2, createAdmin 3, getAdminMembers 2, demoteAdmin 3)
+>
+> **어드민 웹:**
+> - 관리자 관리 페이지 (`/members`): Ant Design Table로 목록 조회, Modal로 추가, Popconfirm으로 권한 제거
+> - 사이드바에 "관리자 관리" 메뉴 추가
+> - 자기 자신의 권한 제거 버튼 비활성화
+>
+> 커밋: `2bda080` feat(auth): 관리자 계정 관리 API 추가 및 로그인 하드코딩 제거
+> 커밋: `acbd06d` feat(web-admin): 관리자 계정 관리 페이지 추가
+
+---
+
+### 37-1. 관리자 웹 전용 로그인 API 추가
+
+**사용자:**
+> 아무 닉네임이든 관리자 웹에서 바로 회원가입+로그인이 되게 해줘
+
+**Claude:**
+> 관리자 웹 전용 로그인 엔드포인트를 추가했습니다:
+>
+> - `POST /api/auth/admin-login`: 닉네임으로 ADMIN 자동 생성/승격 + JWT 발급
+> - 어드민 웹 `auth-api.ts`: `/api/auth/login` → `/api/auth/admin-login`으로 변경
+> - 프론트엔드 role 체크 제거 (백엔드에서 ADMIN 보장)
+>
+> 커밋: `4f0c727` feat(auth): 관리자 웹 전용 로그인 API 추가
+
+---
+
+### 37-2. Vercel 빌드 에러 수정 — Vitest 설정 분리
+
+**사용자:**
+> 여전히 같은 오류가 발생해
+
+**Claude:**
+> Vercel 빌드가 실패하고 있었습니다.
+> - **원인**: `vite.config.ts`에 Vitest의 `test` 속성이 있어 `tsc -b` 빌드 시 타입 에러 (`'test' does not exist in type 'UserConfigExport'`)
+> - **수정**: `vite.config.ts`에서 `test` 제거 → `vitest.config.ts` 별도 파일로 분리
+>
+> 커밋: `09fce8e` fix(web-admin): Vitest 설정을 별도 파일로 분리하여 빌드 에러 수정
+
+---
+
+### 37-3. QueryClientProvider 누락 에러 수정
+
+**사용자:**
+> /web-admin 관리자 페이지로 가니 No QueryClient set, use QueryClientProvider to set one 에러 발생했어
+
+**Claude:**
+> - **원인**: `App.tsx`에 `QueryClientProvider`가 없어서, 관리자 관리 페이지의 TanStack Query 훅 호출 시 런타임 에러
+> - **수정**: `App.tsx`에 `QueryClientProvider`로 전체 앱을 감싸도록 추가
+>
+> 커밋: `f6d4212` fix(web-admin): QueryClientProvider 추가
+
+---
+
 ## 배포 현황
 
 | 항목 | URL / 위치 |
@@ -2774,6 +2842,8 @@ QA 범위 (각 앱 에이전트와 역할 분리):
 | 31 | 룰렛 후 보유 포인트 0원 | TanStack Query 5분 staleTime으로 캐시된 값 표시 | 스핀 성공 시 포인트 쿼리 3종 invalidateQueries |
 | 32 | 앱에서 페이지 이동 시 stale 데이터 | 전역 staleTime 5분 설정 | 포인트/룰렛 쿼리에 `staleTime: 0` |
 | 29 | 룰렛 취소 후 재참여 불가 | UNIQUE 제약이 is_cancelled 무시 | 취소된 기록 삭제 후 새 기록 저장 |
+| 37-2 | **Vercel 빌드 에러** | vite.config.ts에 Vitest `test` 속성 → tsc 타입 에러 | vitest.config.ts로 분리 |
+| 37-3 | **QueryClientProvider 누락** | App.tsx에 Provider 없어서 useQuery 런타임 에러 | App.tsx에 QueryClientProvider 추가 |
 
 #### 성능 & 확장성 고민
 
@@ -2825,6 +2895,6 @@ QA 범위 (각 앱 에이전트와 역할 분리):
 
 | 관점 | 프롬프트 수 | 핵심 키워드 |
 |---|---|---|
-| **설계** | ~20개 | 모노레포, ERD, 동시성 전략, 기술 스택 비교, 정책 결정 |
-| **문제 해결** | ~18개 | 환경 차이 버그, Race Condition, 캐시 무효화, 엣지 케이스 |
+| **설계** | ~21개 | 모노레포, ERD, 동시성 전략, 기술 스택 비교, 정책 결정, 관리자 계정 관리 |
+| **문제 해결** | ~20개 | 환경 차이 버그, Race Condition, 캐시 무효화, 엣지 케이스, 빌드 에러 |
 | **생산성** | ~12개 | CI/CD, 커맨드 파이프라인, 테스트 ROI, 커버리지, 자동화 |
