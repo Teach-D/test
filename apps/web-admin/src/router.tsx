@@ -6,6 +6,7 @@ import { DashboardPage } from './features/dashboard/components/dashboard-page';
 import { BudgetPage } from './features/budget/components/budget-page';
 import { ProductPage } from './features/product/components/product-page';
 import { OrderPage } from './features/order/components/order-page';
+import { AdminMemberPage } from './features/admin-members/components/admin-member-page';
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
       { path: 'budget', element: <BudgetPage /> },
       { path: 'products', element: <ProductPage /> },
       { path: 'orders', element: <OrderPage /> },
+      { path: 'members', element: <AdminMemberPage /> },
     ],
   },
 ]);

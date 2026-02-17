@@ -6,6 +6,7 @@ import {
   DollarOutlined,
   ShoppingOutlined,
   OrderedListOutlined,
+  TeamOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -19,6 +20,7 @@ const MENU_ITEMS = [
   { key: '/budget', icon: <DollarOutlined />, label: '예산 관리' },
   { key: '/products', icon: <ShoppingOutlined />, label: '상품 관리' },
   { key: '/orders', icon: <OrderedListOutlined />, label: '주문 내역' },
+  { key: '/members', icon: <TeamOutlined />, label: '관리자 관리' },
 ];
 
 export function AdminLayout(): React.ReactElement {
