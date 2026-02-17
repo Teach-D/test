@@ -92,16 +92,18 @@ tasks.jacocoTestReport {
 
     // 커버리지 측정 제외 대상 (설정, DTO, 엔티티 등)
     classDirectories.setFrom(
-        files(classDirectories.files.map {
-            fileTree(it) {
-                exclude(
-                    "**/config/**",
-                    "**/dto/**",
-                    "**/entity/**",
-                    "**/exception/**",
-                    "**/*Application*",
-                )
-            }
-        }),
+        files(
+            classDirectories.files.map {
+                fileTree(it) {
+                    exclude(
+                        "**/config/**",
+                        "**/dto/**",
+                        "**/entity/**",
+                        "**/exception/**",
+                        "**/*Application*",
+                    )
+                }
+            },
+        ),
     )
 }
